@@ -27,7 +27,7 @@ const Departments = () => {
       <div className="flex items-center text-sm text-gray-600 mb-6 space-x-4">
         <BackButton />
         <div className="flex items-center space-x-2">
-          <FaHome className="text-blue-500" />
+          <FaHome className="text-blue-500 cursor-pointer" onClick={() => navigate("/dashboard")} />
           <FaChevronRight className="text-gray-400" />
           <span className="text-blue-600 font-medium">Departments</span>
         </div>

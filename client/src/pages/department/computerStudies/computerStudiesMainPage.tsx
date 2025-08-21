@@ -111,13 +111,7 @@ const ComputerStudiesMainPage = () => {
   // 🔹 Folder navigation
   const handleFolderClick = (folder: Folder) => {
     setShowContextMenu(false);
-    if (folder.folderName === "Program Outcomes") {
-      navigate("/departments/computerstudies/program-outcomes");
-    } else if (folder.folderName === "Curriculum") {
-      navigate("/departments/computerstudies/curriculum");
-    } else {
-      alert(`Page for "${folder.folderName}" is not yet available.`);
-    }
+    navigate(`/departments/computerstudies/folder/${folder.id}`);
   };
 
   return (
@@ -128,7 +122,7 @@ const ComputerStudiesMainPage = () => {
         <div className="flex items-center space-x-2">
           <FaHome
             className="text-blue-500 cursor-pointer"
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/dashboard")}
           />
           <FaChevronRight className="text-gray-400" />
           <span
@@ -155,7 +149,7 @@ const ComputerStudiesMainPage = () => {
           onClick={() => setIsAddModalOpen(true)}
           className="ml-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 flex items-center"
         >
-          <FaPlus className="mr-2" /> Add Folder
+          <FaPlus className="mr-2" /> Add
         </button>
       </div>
 
