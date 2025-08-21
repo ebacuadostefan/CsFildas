@@ -1,7 +1,6 @@
 import { Route, Routes } from "react-router-dom";
 import AppLayout from "../layout/AppLayout";
-import LoginPage from "../pages/auth/LoginPage"; 
-
+import LoginPage from "../pages/auth/LoginPage";
 
 import Departments from "../pages/department/departmentMainPage";
 import ComputerStudies from "../pages/department/computerStudies/computerStudiesMainPage";
@@ -20,15 +19,15 @@ const AppRoutes = () => {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/departments" element={<Departments />} />
         <Route
-          path="/departments/computer-studies"
+          path="/departments/computerstudies"
           element={<ComputerStudies />}
         />
         <Route
-          path="/departments/computer-studies/program-outcomes"
+          path="/departments/computerstudies/program-outcomes"
           element={<ProgramOutcomes />}
         />
         <Route
-          path="/departments/computer-studies/curriculum"
+          path="/departments/computerstudies/curriculum"
           element={<Curriculum />}
         />
       </Route>

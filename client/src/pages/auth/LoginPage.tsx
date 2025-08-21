@@ -3,11 +3,7 @@ const LoginForm = () => {
     <div className="flex h-screen bg-gray-100">
       {/* Left Panel */}
       <div className="w-1/2 bg-gray-200 flex flex-col items-center justify-center px-8">
-        <img
-          src="/assets/logo.png" // 🔁 Replace with your actual logo path (e.g., public folder)
-          alt="School Logo"
-          className="w-28 mb-10"
-        />
+        <img src="/assets/logo.png" alt="School Logo" className="w-28 mb-10" />
 
         <form className="w-full max-w-sm flex flex-col gap-4">
           <input

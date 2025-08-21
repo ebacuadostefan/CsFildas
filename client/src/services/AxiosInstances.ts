@@ -18,15 +18,20 @@ AxiosInstance.interceptors.request.use((config) => {
 })
 
 AxiosInstance.interceptors.response.use(
-    (response) => {
-        return response;
-    },
-    (error) => {
-        if(error.response.status === 422) {
-            console.error('Unexpected response error:', error);
-        }
-         return Promise.reject(error);
+  (response) => {
+    return response;
+  },
+  (error) => {
+    if (error.response) {
+      if (error.response.status === 422) {
+        console.error('Unexpected response error:', error.response.data);
+      }
+    } else {
+      console.error("Network or CORS error:", error.message);
     }
+    return Promise.reject(error);
+  }
 );
+
 
 export default AxiosInstance;

@@ -3,7 +3,6 @@ import { FaChevronRight, FaHome, FaUpload, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import BackButton from "../../../../components/Button/BackButton";
 
-
 const Curriculum = () => {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -41,7 +40,6 @@ const Curriculum = () => {
     <div className="p-15 max-w-7xl mx-auto">
       {/* 🔙 Back + Breadcrumbs */}
       <div className="flex items-center text-sm text-gray-600 mb-6 space-x-4">
-
         <BackButton />
 
         <div className="flex items-center space-x-2">
@@ -59,7 +57,7 @@ const Curriculum = () => {
           <FaChevronRight className="text-gray-400" />
           <span
             className="text-blue-500 hover:underline cursor-pointer"
-            onClick={() => navigate("/departments/computer-studies")}
+            onClick={() => navigate("/departments/computerstudies")}
           >
             Computer Studies
           </span>

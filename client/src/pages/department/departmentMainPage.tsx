@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaHome, FaChevronRight } from "react-icons/fa";
+import BackButton from "../../components/Button/BackButton";
+import CCSimg from "../../assets/img/CSSimg.jpg";
 
 const Departments = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -23,14 +25,7 @@ const Departments = () => {
     <div className="p-15 max-w-7xl mx-auto relative">
       {/* Breadcrumbs + Back Button */}
       <div className="flex items-center text-sm text-gray-600 mb-6 space-x-4">
-        <button
-          onClick={() => navigate(-1)}
-          className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-100 transition text-gray-600"
-          aria-label="Go Back"
-        >
-            Back
-        </button>
-
+        <BackButton />
         <div className="flex items-center space-x-2">
           <FaHome className="text-blue-500" />
           <FaChevronRight className="text-gray-400" />
@@ -57,12 +52,22 @@ const Departments = () => {
               key={index}
               onClick={() =>
                 dept === "Computer Studies"
-                  ? navigate("/departments/computer-studies")
+                  ? navigate("/departments/computerstudies")
                   : alert(`Page for ${dept} is not yet available.`)
               }
               className="bg-white rounded-lg shadow-md flex flex-col items-center p-6 hover:shadow-lg transition"
             >
-              <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-300 rounded-full mb-4"></div>
+              {/* ✅ Show image for Computer Studies, otherwise placeholder */}
+              {dept === "Computer Studies" ? (
+                <img
+                  src={CCSimg}
+                  alt="Computer Studies"
+                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-full mb-4 object-cover"
+                />
+              ) : (
+                <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-300 rounded-full mb-4"></div>
+              )}
+
               <p className="text-center font-medium text-gray-700 uppercase text-sm">
                 {dept}
               </p>

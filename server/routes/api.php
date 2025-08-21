@@ -1,10 +1,10 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\CSfolderController;
 
-use App\Http\Controllers\API\DepartmentController;
-
-Route::get('/departments', [DepartmentController::class, 'index']);
-Route::post('/departments', [DepartmentController::class, 'store']);
-
-
+Route::get('/csfolders', [CSfolderController::class, 'index']);
+Route::post('/csfolders', [CSfolderController::class, 'store']);
+Route::get('/csfolders/{id}', [CSfolderController::class, 'show']);
+Route::put('/csfolders/{id}', [CSfolderController::class, 'update']);
+Route::delete('/csfolders/{id}', [CSfolderController::class, 'destroy']);

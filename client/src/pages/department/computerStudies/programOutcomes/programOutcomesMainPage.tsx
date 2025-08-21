@@ -42,7 +42,6 @@ const ProgramOutcomes = () => {
     <div className="p-15 max-w-7xl mx-auto">
       {/* 🔙 Back + Breadcrumbs */}
       <div className="flex items-center text-sm text-gray-600 mb-6 space-x-4">
-
         <BackButton />
 
         <div className="flex items-center space-x-2">
@@ -60,7 +59,7 @@ const ProgramOutcomes = () => {
           <FaChevronRight className="text-gray-400" />
           <span
             className="cursor-pointer text-blue-500 hover:underline"
-            onClick={() => navigate("/departments/computer-studies")}
+            onClick={() => navigate("/departments/computerstudies")}
           >
             Computer Studies
           </span>
