@@ -1,19 +1,10 @@
 import type { JSX } from "react";
-import { FaCheckCircle, FaFileAlt, FaClipboardList, FaUserShield } from "react-icons/fa";
-// import {
-//   LineChart,
-//   Line,
-//   XAxis,
-//   YAxis,
-//   CartesianGrid,
-//   Tooltip,
-//   ResponsiveContainer,
-//   BarChart,
-//   Bar,
-// } from "recharts";
-
-// Example data for charts
-
+import {
+  FaCheckCircle,
+  FaFileAlt,
+  FaClipboardList,
+  FaUserShield,
+} from "react-icons/fa";
 
 const Dashboard = () => {
   return (
@@ -60,7 +51,9 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Line Chart - Audits Completed Over Time */}
         <div className="bg-white p-5 rounded-xl shadow-lg">
-          <h2 className="text-xl font-semibold text-gray-700 mb-4">Audits Over Time</h2>
+          <h2 className="text-xl font-semibold text-gray-700 mb-4">
+            Audits Over Time
+          </h2>
           <div className="h-64 flex items-center justify-center text-gray-500">
             Charts will appear here after installing recharts package
           </div>
@@ -68,7 +61,9 @@ const Dashboard = () => {
 
         {/* Bar Chart - Pending vs Completed Reports */}
         <div className="bg-white p-5 rounded-xl shadow-lg">
-          <h2 className="text-xl font-semibold text-gray-700 mb-4">Reports Status</h2>
+          <h2 className="text-xl font-semibold text-gray-700 mb-4">
+            Reports Status
+          </h2>
           <div className="h-64 flex items-center justify-center text-gray-500">
             Charts will appear here after installing recharts package
           </div>
@@ -98,10 +93,26 @@ const StatCard = ({
 }) => {
   const colorClasses = {
     red: { text: "text-red-600", bg: "bg-red-50", border: "border-red-400" },
-    blue: { text: "text-blue-600", bg: "bg-blue-50", border: "border-blue-400" },
-    green: { text: "text-green-600", bg: "bg-green-50", border: "border-green-400" },
-    indigo: { text: "text-indigo-600", bg: "bg-indigo-50", border: "border-indigo-400" },
-  }[color] || { text: "text-gray-600", bg: "bg-gray-50", border: "border-gray-400" };
+    blue: {
+      text: "text-blue-600",
+      bg: "bg-blue-50",
+      border: "border-blue-400",
+    },
+    green: {
+      text: "text-green-600",
+      bg: "bg-green-50",
+      border: "border-green-400",
+    },
+    indigo: {
+      text: "text-indigo-600",
+      bg: "bg-indigo-50",
+      border: "border-indigo-400",
+    },
+  }[color] || {
+    text: "text-gray-600",
+    bg: "bg-gray-50",
+    border: "border-gray-400",
+  };
 
   return (
     <div

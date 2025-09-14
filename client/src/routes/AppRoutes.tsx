@@ -4,9 +4,8 @@ import LoginPage from "../pages/auth/LoginPage";
 
 import Departments from "../pages/department/departmentMainPage";
 import ComputerStudies from "../pages/department/computerStudies/computerStudiesMainPage";
-import Dashboard from "../pages/department/dashboardMainPage";
+import Dashboard from "../pages/dashboardMainPage";
 import FolderPage from "../pages/department/computerStudies/Folders/FolderPage";
-
 // Optional: create a simple NotFound page
 const NotFoundPage = () => (
   <h1 className="text-center mt-10 text-2xl">404 | Page Not Found</h1>

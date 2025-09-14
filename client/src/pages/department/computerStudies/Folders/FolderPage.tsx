@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import type { Folder, FileItem } from "../../../../services/ComputerStudiesServices";
+import type {
+  Folder,
+  FileItem,
+} from "../../../../services/ComputerStudiesServices";
 import ComputerStudiesServices from "../../../../services/ComputerStudiesServices";
 import SearchUploadBar from "./Components/SearchBar";
 import Breadcrumbs from "./Components/BreadCrumps";
-import FilesTable from "./Components/FileTable";
+import FilesTable from "./Files/FileTable";
 import DeleteFolderModal from "../Components/DeleteForm";
 
 const FolderPage = () => {
@@ -44,20 +47,25 @@ const FolderPage = () => {
     const fullUrl = `http://localhost:8000${file.filePath}`;
     if (file.fileType?.includes("pdf") || file.fileType?.includes("image")) {
       window.open(fullUrl, "_blank");
-    } else if (file.fileType?.includes("doc") || file.fileType?.includes("docx")) {
-      const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(fullUrl)}&embedded=true`;
+    } else if (
+      file.fileType?.includes("doc") ||
+      file.fileType?.includes("docx")
+    ) {
+      const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(
+        fullUrl
+      )}&embedded=true`;
       window.open(viewerUrl, "_blank");
     } else {
       window.open(fullUrl, "_blank");
     }
   };
 
-  const filteredFiles = files.filter(file =>
+  const filteredFiles = files.filter((file) =>
     file.fileName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
-    <div className="p-15 max-w-7xl mx-auto relative">
+    <div className="p-15 max-w-7xl ml-3 mx-auto relative">
       <Breadcrumbs folderName={folder?.folderName} />
 
       <SearchUploadBar
@@ -84,7 +92,7 @@ const FolderPage = () => {
           if (!selectedFile) return;
           try {
             await ComputerStudiesServices.deleteFile(selectedFile.id);
-            setFiles(prev => prev.filter(f => f.id !== selectedFile.id));
+            setFiles((prev) => prev.filter((f) => f.id !== selectedFile.id));
           } catch (error) {
             console.error("Error deleting file:", error);
           }

@@ -4,7 +4,10 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\CSfolderController;
 use App\Http\Controllers\Api\CsFileController;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;    
+use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Api\DepartmentController;    
+
+Route::apiResource('departments', DepartmentController::class);
 
 Route::get('/csfolders', [CSfolderController::class, 'index']);
 Route::post('/csfolders', [CSfolderController::class, 'store']);
