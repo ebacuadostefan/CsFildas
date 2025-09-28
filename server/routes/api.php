@@ -1,23 +1,33 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\CSfolderController;
-use App\Http\Controllers\Api\CsFileController;
+use App\Http\Controllers\Api\FolderController;
+use App\Http\Controllers\Api\FileController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Api\DepartmentController;    
 
+Route::get('/departments/{slug}/folders', [DepartmentController::class, 'getFolders']);
+Route::post('/departments/{slug}/folders', [DepartmentController::class, 'createFolder']);
+
 Route::apiResource('departments', DepartmentController::class);
 
-Route::get('/csfolders', [CSfolderController::class, 'index']);
-Route::post('/csfolders', [CSfolderController::class, 'store']);
-Route::get('/csfolders/{id}', [CSfolderController::class, 'show']);
-Route::put('/csfolders/{id}', [CSfolderController::class, 'update']);
-Route::delete('/csfolders/{id}', [CSfolderController::class, 'destroy']);
+// Department folders
+Route::get('/folders', [FolderController::class, 'index']);
+Route::post('/folders', [FolderController::class, 'store']);
+Route::get('/folders/{id}', [FolderController::class, 'show']);
+Route::put('/folders/{id}', [FolderController::class, 'update']);
+Route::delete('/folders/{id}', [FolderController::class, 'destroy']);
 
-Route::get('/folders/{folderId}/files', [CsFileController::class, 'index']);
-Route::post('/folders/{folderId}/files', [CsFileController::class, 'store']);
-Route::delete('/files/{id}', [CsFileController::class, 'destroy']);
+// Slug-based folder access
+Route::get('/folders/slug/{slug}', [FolderController::class, 'showBySlug']);
+Route::get('/folders/slug/{slug}/files', [FileController::class, 'indexBySlug']);
+Route::post('/folders/slug/{slug}/files', [FileController::class, 'storeBySlug']);
+Route::delete('/folders/slug/{slug}/files/{fileId}', [FileController::class, 'destroyBySlug']);
+
+Route::get('/folders/{folderId}/files', [FileController::class, 'index']);
+Route::post('/folders/{folderId}/files', [FileController::class, 'store']);
+Route::delete('/files/{id}', [FileController::class, 'destroy']);
 
 Route::post('/login', function (Request $request) {
     $credentials = $request->only('email', 'password');

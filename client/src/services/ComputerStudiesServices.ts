@@ -27,7 +27,7 @@ const ComputerStudiesServices = {
   // GET all folders
   loadFolders: async (): Promise<Folder[]> => {
     try {
-      const response = await AxiosInstance.get<Folder[]>("/csfolders");
+      const response = await AxiosInstance.get<Folder[]>("/folders");
       return response.data;
     } catch (error) {
       console.error("Error loading folders:", error);
@@ -38,7 +38,7 @@ const ComputerStudiesServices = {
   // POST new folder
   storeFolder: async (data: { folderName: string; description?: string }): Promise<Folder> => {
     try {
-      const response = await AxiosInstance.post<Folder>("/csfolders", data);
+      const response = await AxiosInstance.post<Folder>("/folders", data);
       return response.data;
     } catch (error) {
       console.error("Error storing folder:", error);
@@ -49,7 +49,7 @@ const ComputerStudiesServices = {
   // GET single folder
   getFolder: async (id: number | string): Promise<Folder> => {
     try {
-      const response = await AxiosInstance.get<Folder>(`/csfolders/${id}`);
+      const response = await AxiosInstance.get<Folder>(`/folders/${id}`);
       return response.data;
     } catch (error) {
       console.error("Error getting folder:", error);
@@ -63,7 +63,7 @@ const ComputerStudiesServices = {
     data: { folderName: string; description?: string }
   ): Promise<Folder> => {
     try {
-      const response = await AxiosInstance.put<Folder>(`/csfolders/${id}`, data);
+      const response = await AxiosInstance.put<Folder>(`/folders/${id}`, data);
       return response.data;
     } catch (error) {
       console.error("Error updating folder:", error);
@@ -74,7 +74,7 @@ const ComputerStudiesServices = {
   // DELETE folder
   destroyFolder: async (id: number | string): Promise<{ message: string }> => {
     try {
-      const response = await AxiosInstance.delete<{ message: string }>(`/csfolders/${id}`);
+      const response = await AxiosInstance.delete<{ message: string }>(`/folders/${id}`);
       return response.data;
     } catch (error) {
       console.error("Error deleting folder:", error);

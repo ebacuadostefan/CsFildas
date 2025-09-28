@@ -1,6 +1,5 @@
 import { FaTrash } from "react-icons/fa";
-import type { FileItem } from "../../../../../services/ComputerStudiesServices";
-
+import type { FileItem } from "../../../../services/DepartmentServices";
 
 interface FilesTableProps {
   files: FileItem[];
@@ -29,7 +28,9 @@ const FilesTable = ({ files, onFileClick, onDeleteClick }: FilesTableProps) => {
                 >
                   {file.fileName}
                 </td>
-                <td className="px-4 sm:px-6 py-4">{file.fileType || "Unknown"}</td>
+                <td className="px-4 sm:px-6 py-4">
+                  {file.fileType || "Unknown"}
+                </td>
                 <td className="px-4 sm:px-6 py-4">
                   <button
                     onClick={() => onDeleteClick(file)}
@@ -42,10 +43,7 @@ const FilesTable = ({ files, onFileClick, onDeleteClick }: FilesTableProps) => {
             ))
           ) : (
             <tr>
-              <td
-                colSpan={3}
-                className="text-center text-gray-600 px-6 py-6"
-              >
+              <td colSpan={3} className="text-center text-gray-600 px-6 py-6">
                 No files found in this folder.
               </td>
             </tr>

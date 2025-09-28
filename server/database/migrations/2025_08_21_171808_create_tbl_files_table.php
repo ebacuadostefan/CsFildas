@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tbl_csfiles', function (Blueprint $table) {
+        Schema::create('tbl_files', function (Blueprint $table) {
             $table->id(); // primary key
             $table->unsignedBigInteger('folder_id'); 
             $table->string('fileName'); 
@@ -22,7 +22,7 @@ return new class extends Migration
 
             // Foreign key constraint
             $table->foreign('folder_id')
-                  ->references('id')->on('tbl_csfolder')
+                  ->references('id')->on('tbl_folder')
                   ->onDelete('cascade'); // if folder is deleted, files go too
         });
     }
@@ -32,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tbl_csfiles');
+        Schema::dropIfExists('tbl_files');
     }
 };

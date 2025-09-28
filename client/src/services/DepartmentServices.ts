@@ -1,34 +1,128 @@
 // src/services/DepartmentServices.ts
 import AxiosInstance from "./AxiosInstances";
 
+// Department interface
 export interface Department {
   id: number;
   name: string;
   alias?: string;
+  slug?: string;
+  image?: string;
+}
+
+// Folder interface
+export interface Folder {
+  id: number;
+  folderName: string;
+  description?: string;
+  slug: string;
+  departmentId: number;
+}
+
+// File interface
+export interface FileItem {
+  id: number;
+  fileName: string;
+  filePath: string;
+  fileType?: string;
+  folder_id: number;
 }
 
 const DepartmentServices = {
-  // GET all departments
+  // -------------------- DEPARTMENTS --------------------
+
+  // Get all departments
   loadDepartments: async (): Promise<Department[]> => {
     const response = await AxiosInstance.get("/departments");
     return response.data;
   },
 
-  // POST create new department
-  storeDepartment: async (department: Omit<Department, "id">): Promise<Department> => {
-    const response = await AxiosInstance.post("/departments", department);
+  // Create new department
+  storeDepartment: async (department: FormData): Promise<Department> => {
+    const response = await AxiosInstance.post("/departments", department, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     return response.data;
   },
 
-  // PUT update department
-  updateDepartment: async (id: number, department: Partial<Department>): Promise<Department> => {
+  // Update department
+  updateDepartment: async (
+    id: number,
+    department: Partial<Department>
+  ): Promise<Department> => {
     const response = await AxiosInstance.put(`/departments/${id}`, department);
     return response.data;
   },
 
-  // DELETE department
+  // Delete department
   destroyDepartment: async (id: number): Promise<void> => {
     await AxiosInstance.delete(`/departments/${id}`);
+  },
+
+  // -------------------- FOLDERS --------------------
+
+  // Get a folder by slug
+  getFolderBySlug: async (slug: string): Promise<Folder> => {
+    const response = await AxiosInstance.get(`/folders/slug/${slug}`);
+    return response.data;
+  },
+
+  // Get folders by department slug
+  getFoldersByDepartmentSlug: async (departmentSlug: string): Promise<Folder[]> => {
+    const response = await AxiosInstance.get(`/departments/${departmentSlug}/folders`);
+    return response.data;
+  },
+
+  // Create folder in department
+  createFolderInDepartment: async (
+    departmentSlug: string,
+    folderData: { folderName: string; description?: string }
+  ): Promise<Folder> => {
+    const response = await AxiosInstance.post(
+      `/departments/${departmentSlug}/folders`,
+      folderData
+    );
+    return response.data;
+  },
+
+  // Update folder
+  updateFolder: async (
+    folderId: number,
+    folderData: Partial<Folder>
+  ): Promise<Folder> => {
+    const response = await AxiosInstance.put(`/folders/${folderId}`, folderData);
+    return response.data;
+  },
+
+  // Delete folder
+  deleteFolder: async (folderId: number): Promise<void> => {
+    await AxiosInstance.delete(`/folders/${folderId}`);
+  },
+
+  // -------------------- FILES --------------------
+
+  // Get files by folder slug
+  getFilesBySlug: async (slug: string): Promise<FileItem[]> => {
+    const response = await AxiosInstance.get(`/folders/slug/${slug}/files`);
+    return response.data;
+  },
+
+  // Upload file into folder
+  uploadFile: async (slug: string, file: File): Promise<FileItem> => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await AxiosInstance.post(
+      `/folders/slug/${slug}/files`,
+      formData,
+      { headers: { "Content-Type": "multipart/form-data" } }
+    );
+    return response.data;
+  },
+
+  // Delete file from folder
+  deleteFile: async (slug: string, fileId: number): Promise<void> => {
+    await AxiosInstance.delete(`/folders/slug/${slug}/files/${fileId}`);
   },
 };
 

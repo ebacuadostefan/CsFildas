@@ -1,40 +1,43 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaHome, FaChevronRight, FaPlus } from "react-icons/fa";
-import BackButton from "../../components/Button/BackButton";
 import Modal from "../../components/Modal";
 import AddDepartmentForm from "../department/components/AddDepartmentForm";
 import DepartmentServices, {
   type Department,
 } from "../../services/DepartmentServices";
-import CCSimg from "../../assets/img/CSSimg.jpg";
+import Boxbar from "../../layout/Boxbar";
+import SelectionBar from "../../layout/SelectionBar";
+import Spinner from "../../components/Spinner/Spinner";
+import DeleteDepartmentModal from "./components/DeleteDepartmentModal";
 
 const Departments = () => {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
+  const [isEditing, setIsEditing] = useState(false);
   const navigate = useNavigate();
 
-  // 🔹 Load departments
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
+        setLoading(true);
         const data = await DepartmentServices.loadDepartments();
         setDepartments(data);
       } catch (error) {
         console.error("Failed to load departments:", error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchDepartments();
   }, []);
 
-  // 🔹 Add department
-  const handleAddDepartment = async (name: string, alias: string) => {
+  const handleAddDepartment = async (formData: FormData) => {
     try {
-      const newDept = await DepartmentServices.storeDepartment({
-        name,
-        alias,
-      });
+      const newDept = await DepartmentServices.storeDepartment(formData);
       setDepartments((prev) => [...prev, newDept]);
       setIsAddModalOpen(false);
     } catch (error) {
@@ -42,91 +45,149 @@ const Departments = () => {
     }
   };
 
-  // 🔹 Search filter
+  const handleCheckboxChange = (id: string) => {
+    setSelectedDepartments((prev) =>
+      prev.includes(id) ? prev.filter((deptId) => deptId !== id) : [...prev, id]
+    );
+  };
+
+  const handleDeleteDepartments = () => {
+    if (selectedDepartments.length > 0) setIsDeleteModalOpen(true);
+  };
+
+  const confirmDeleteDepartments = async () => {
+    try {
+      await Promise.all(
+        selectedDepartments.map((id) =>
+          DepartmentServices.destroyDepartment(id)
+        )
+      );
+      setDepartments((prev) =>
+        prev.filter((dept) => !selectedDepartments.includes(dept.id))
+      );
+      setSelectedDepartments([]);
+      setIsEditing(false);
+      setIsDeleteModalOpen(false);
+    } catch (error) {
+      console.error("Failed to delete departments:", error);
+    }
+  };
+
   const filteredDepartments = departments.filter((dept) =>
     dept.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
-    <div className="p-15 max-w-7xl ml-3 mx-auto relative">
-      {/* Breadcrumbs */}
-      <div className="flex items-center text-sm text-gray-600 mb-6 space-x-4">
-        <BackButton />
-        <div className="flex items-center space-x-2">
-          <FaHome
-            className="text-blue-500 cursor-pointer"
-            onClick={() => navigate("/dashboard")}
-          />
-          <FaChevronRight className="text-gray-400" />
-          <span className="text-blue-600 font-medium">Departments</span>
-        </div>
-      </div>
+    <>
+      <Boxbar
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        onAdd={() => setIsAddModalOpen(true)}
+      />
 
-      {/* Search + Add Button */}
-      <div className="flex justify-between items-center mb-8">
-        <input
-          type="text"
-          placeholder="Search departments..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-        />
-        <button
-          onClick={() => setIsAddModalOpen(true)}
-          className="ml-4 px-2 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 flex items-center"
-        >
-          <FaPlus className="mr-2" /> Add
-        </button>
-      </div>
+      <SelectionBar
+        onAdd={() => setIsAddModalOpen(true)}
+        totalItems={filteredDepartments.length}
+        selectedItems={selectedDepartments.length}
+        isEditing={isEditing}
+        onSelectAll={(selectAll: boolean) => {
+          if (!isEditing) return;
+          setSelectedDepartments(
+            selectAll ? filteredDepartments.map((d) => d.id) : []
+          );
+        }}
+        onEdit={() => setIsEditing((prev) => !prev)}
+        onDelete={handleDeleteDepartments}
+      />
 
-      {/* Department Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 cursor-pointer">
-        {filteredDepartments.length > 0 ? (
-          filteredDepartments.map((dept) => (
-            <div
-              key={dept.id}
-              onClick={() =>
-                dept.name === "Computer Studies" ||
-                "College of Computer Studies"
-                  ? navigate("/departments/computerstudies")
-                  : alert(`Page for ${dept.name} is not yet available.`)
-              }
-              className="bg-white rounded-lg shadow-md flex flex-col items-center p-6 hover:shadow-lg transition"
-            >
-              {dept.name === "Computer Studies" ||
-              "College of Computer Studies" ? (
-                <img
-                  src={CCSimg}
-                  alt="College of Computer Studies"
-                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-full mb-4 object-cover"
-                />
-              ) : (
-                <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-300 rounded-full mb-4"></div>
-              )}
-              <p className="text-center font-medium text-gray-700 uppercase text-sm">
-                {dept.name}
-              </p>
-            </div>
-          ))
+      <div className="p-15 max-w-7xl mx-auto relative">
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <Spinner size="lg" />
+          </div>
         ) : (
-          <p className="text-gray-600 col-span-full text-center">
-            No departments found.
-          </p>
-        )}
-      </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {filteredDepartments.length > 0 ? (
+              filteredDepartments.map((dept) => {
+                const isSelected = selectedDepartments.includes(dept.id);
 
-      {/* ➕ Add Department Modal */}
-      <Modal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        showCloseButton
-      >
-        <AddDepartmentForm
-          onSubmit={handleAddDepartment}
-          onCancel={() => setIsAddModalOpen(false)}
+                const handleCardClick = () => {
+                  if (isEditing) {
+                    handleCheckboxChange(dept.id);
+                  } else {
+                    navigate(
+                      `/departments/${
+                        dept.slug ||
+                        dept.name.toLowerCase().replace(/\s+/g, "-")
+                      }`
+                    );
+                  }
+                };
+
+                return (
+                  <div
+                    key={dept.id}
+                    className={`bg-white rounded-lg shadow-lg flex flex-col items-center p-6 transition cursor-pointer relative
+                      ${isEditing && isSelected ? "ring-2 ring-blue-500" : ""}
+                      hover:shadow-lg`}
+                    onClick={handleCardClick}
+                  >
+                    {isEditing && (
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => handleCheckboxChange(dept.id)}
+                        className="absolute top-2 right-2 w-3 h-3 cursor-pointer"
+                      />
+                    )}
+
+                    {dept.image ? (
+                      <img
+                        src={dept.image}
+                        alt={dept.name}
+                        className="w-20 h-20 sm:w-24 sm:h-24 rounded-full mb-4 object-cover"
+                      />
+                    ) : (
+                      <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-300 rounded-full mb-4"></div>
+                    )}
+
+                    <p className="text-center font-medium text-gray-700 uppercase text-sm">
+                      {dept.name}
+                    </p>
+                  </div>
+                );
+              })
+            ) : (
+              <p className="text-gray-600 col-span-full text-center">
+                No departments found.
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Add Department Modal */}
+        <Modal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+          showCloseButton
+        >
+          <AddDepartmentForm
+            onSubmit={handleAddDepartment}
+            onCancel={() => setIsAddModalOpen(false)}
+          />
+        </Modal>
+
+        {/* Delete Confirmation Modal */}
+        <DeleteDepartmentModal
+          isOpen={isDeleteModalOpen}
+          departmentNames={departments
+            .filter((d) => selectedDepartments.includes(d.id))
+            .map((d) => d.name)}
+          onDelete={confirmDeleteDepartments}
+          onClose={() => setIsDeleteModalOpen(false)}
         />
-      </Modal>
-    </div>
+      </div>
+    </>
   );
 };
 

@@ -11,6 +11,7 @@ return new class extends Migration {
             $table->id();
             $table->string('name'); // Department name
             $table->string('alias');
+            $table->string('image'); // Image path or URL
             $table->timestamps();
         });
     }

@@ -3,15 +3,15 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\CSfolder;
+use App\Models\Folder;
 use Illuminate\Http\Request;
 
-class CSfolderController extends Controller
+class FolderController extends Controller
 {
     // Get all folders
     public function index()
     {
-        return response()->json(CSfolder::all(), 200);
+        return response()->json(Folder::all(), 200);
     }
 
     // Store new folder
@@ -22,7 +22,7 @@ class CSfolderController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        $folder = CSfolder::create($validated);
+        $folder = Folder::create($validated);
 
         return response()->json($folder, 201);
     }
@@ -30,14 +30,21 @@ class CSfolderController extends Controller
     // Show single folder
     public function show($id)
     {
-        $folder = CSfolder::findOrFail($id);
+        $folder = Folder::findOrFail($id);
+        return response()->json($folder, 200);
+    }
+
+    // Show folder by slug
+    public function showBySlug($slug)
+    {
+        $folder = Folder::where('slug', $slug)->firstOrFail();
         return response()->json($folder, 200);
     }
 
     // Update folder
     public function update(Request $request, $id)
     {
-        $folder = CSfolder::findOrFail($id);
+        $folder = Folder::findOrFail($id);
 
         $validated = $request->validate([
             'folderName' => 'required|string|max:255',
@@ -52,7 +59,7 @@ class CSfolderController extends Controller
     // Delete folder
     public function destroy($id)
     {
-        $folder = CSfolder::findOrFail($id);
+        $folder = Folder::findOrFail($id);
         $folder->delete();
 
         return response()->json(null, 204);

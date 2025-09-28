@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tbl_csfolder', function (Blueprint $table) {
+        Schema::create('tbl_folder', function (Blueprint $table) {
             $table->id(); // primary key
             $table->string('folderName'); // folder name
             $table->text('description')->nullable(); // optional
@@ -24,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tbl_csfolder');
+        Schema::dropIfExists('tbl_folder');
     }
 };

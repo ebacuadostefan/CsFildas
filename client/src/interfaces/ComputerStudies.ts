@@ -1,4 +1,4 @@
-export interface CsFolder {
+export interface Folder {
   _id?: string;
   FolderName: string;
   description?: string;

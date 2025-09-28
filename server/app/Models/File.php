@@ -4,13 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\CSfolder;
+use App\Models\Folder;
 
-class CsFile extends Model
+class File extends Model
 {
     use HasFactory;
 
-    protected $table = 'tbl_csfiles'; // link to your table
+    protected $table = 'tbl_files'; // link to your table
 
     protected $fillable = [
         'folder_id',
@@ -22,6 +22,6 @@ class CsFile extends Model
 
     public function folder()
     {
-        return $this->belongsTo(CSfolder::class, 'folder_id');
+        return $this->belongsTo(Folder::class, 'folder_id');
     }
 }
