@@ -7,6 +7,8 @@ import Boxbar from "../../../layout/Boxbar";
 import DeleteDepartmentModal from "../components/DeleteDepartmentModal";
 import SelectionBar from "../../../layout/SelectionBar";
 // import your modal
+import AddFolderModal from "./Components/AddFolderForm";
+import RenameItemModal from "../../department/components/FolderFileForm";
 
 interface DepartmentFolder {
   id: number;
@@ -24,16 +26,27 @@ const DepartmentFolderPage = () => {
   const [selectedFolders, setSelectedFolders] = useState<number[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
+  const [folderToRename, setFolderToRename] = useState<DepartmentFolder | null>(
+    null
+  );
 
   useEffect(() => {
     if (!slug) return;
 
-    setLoading(true);
-    DepartmentServices.getFoldersByDepartmentSlug(slug)
-      .then(setFolders)
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, [slug]);
+    const id = setTimeout(() => {
+      setLoading(true);
+      DepartmentServices.getFoldersByDepartmentSlug(
+        slug,
+        searchTerm || undefined
+      )
+        .then(setFolders)
+        .catch(console.error)
+        .finally(() => setLoading(false));
+    }, 300);
+    return () => clearTimeout(id);
+  }, [slug, searchTerm]);
 
   // Checkbox selection
   const handleCheckboxChange = (id: number) => {
@@ -49,10 +62,92 @@ const DepartmentFolderPage = () => {
         selectedFolders.map((id) => DepartmentServices.deleteFolder(id))
       );
       setFolders((prev) => prev.filter((f) => !selectedFolders.includes(f.id)));
+      const now = new Date();
+      window.dispatchEvent(
+        new CustomEvent("app-activity", {
+          detail: {
+            id: Date.now(),
+            name: `Deleted ${selectedFolders.length} folder(s)`,
+            time: now.toLocaleTimeString(),
+            date: now.toLocaleDateString(),
+            status: "deleted",
+          },
+        })
+      );
       setSelectedFolders([]);
       setIsEditing(false);
     } catch (error) {
       console.error("Failed to delete folders:", error);
+    }
+  };
+
+  // Add new folder
+  const handleAddFolder = async (folderName: string) => {
+    if (!slug) return;
+    try {
+      const newFolder = await DepartmentServices.createFolderInDepartment(
+        slug,
+        {
+          folderName,
+        }
+      );
+      setFolders((prev) => [...prev, newFolder]);
+      setIsAddModalOpen(false);
+      const now = new Date();
+      window.dispatchEvent(
+        new CustomEvent("app-activity", {
+          detail: {
+            id: Date.now(),
+            name: `Folder created: ${newFolder.folderName}`,
+            time: now.toLocaleTimeString(),
+            date: now.toLocaleDateString(),
+            status: "created",
+          },
+        })
+      );
+    } catch (error) {
+      console.error("Failed to add folder:", error);
+    }
+  };
+
+  // Rename folder
+  const handleRenameFolder = () => {
+    if (selectedFolders.length === 1) {
+      const folder = folders.find((f) => f.id === selectedFolders[0]);
+      if (folder) {
+        setFolderToRename(folder);
+        setIsRenameModalOpen(true);
+      }
+    }
+  };
+
+  const confirmRenameFolder = async (newName: string) => {
+    if (!folderToRename || !newName.trim()) return;
+    try {
+      const updated = await DepartmentServices.updateFolder(folderToRename.id, {
+        folderName: newName.trim(),
+      });
+      setFolders((prev) =>
+        prev.map((f) => (f.id === updated.id ? updated : f))
+      );
+      const now = new Date();
+      window.dispatchEvent(
+        new CustomEvent("app-activity", {
+          detail: {
+            id: Date.now(),
+            name: `Folder renamed to "${updated.folderName}"`,
+            time: now.toLocaleTimeString(),
+            date: now.toLocaleDateString(),
+            status: "updated",
+          },
+        })
+      );
+      setIsRenameModalOpen(false);
+      setFolderToRename(null);
+      setSelectedFolders([]);
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Failed to rename folder:", error);
     }
   };
 
@@ -65,10 +160,11 @@ const DepartmentFolderPage = () => {
       <Boxbar
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
-        onAdd={() => {}}
+        onAdd={() => setIsAddModalOpen(true)}
       />
 
       <SelectionBar
+        onAdd={() => setIsAddModalOpen(true)}
         totalItems={filteredFolders.length}
         selectedItems={selectedFolders.length}
         isEditing={isEditing}
@@ -77,9 +173,10 @@ const DepartmentFolderPage = () => {
           setSelectedFolders(selectAll ? filteredFolders.map((f) => f.id) : [])
         }
         onDelete={() => setIsDeleteModalOpen(true)} // open modal
+        onRename={handleRenameFolder}
       />
 
-      <div className="p-15 max-w-7xl ml-3 mx-auto relative">
+      <div className="mt-10 w-full relative">
         {loading ? (
           <div className="flex justify-center items-center py-20">
             <Spinner size="lg" />
@@ -139,6 +236,24 @@ const DepartmentFolderPage = () => {
           .map((f) => f.folderName)}
         onDelete={handleDeleteFolders}
         onClose={() => setIsDeleteModalOpen(false)}
+      />
+
+      {/* Add Folder Modal */}
+      <AddFolderModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onAdd={handleAddFolder}
+      />
+
+      <RenameItemModal
+        isOpen={isRenameModalOpen}
+        currentName={folderToRename?.folderName || ""}
+        onRename={confirmRenameFolder}
+        onClose={() => {
+          setIsRenameModalOpen(false);
+          setFolderToRename(null);
+        }}
+        title="Rename Folder"
       />
     </>
   );

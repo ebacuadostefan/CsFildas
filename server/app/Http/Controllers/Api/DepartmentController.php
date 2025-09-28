@@ -12,9 +12,14 @@ use Illuminate\Support\Str;
 class DepartmentController extends Controller
 {
     // GET /api/departments
-    public function index()
+    public function index(Request $request)
     {
-        $departments = Department::all();
+        $query = Department::query();
+        if ($request->has('q')) {
+            $q = $request->query('q');
+            $query->where('name', 'like', "%$q%");
+        }
+        $departments = $query->get();
 
         // Transform image into full URL
         $departments->transform(function ($dept) {
@@ -111,10 +116,15 @@ class DepartmentController extends Controller
     }
 
     // GET folders for a department by slug
-    public function getFolders($slug)
+    public function getFolders($slug, Request $request)
     {
         $department = Department::where('slug', $slug)->firstOrFail();
-        $folders = Folder::where('department_id', $department->id)->get();
+        $folderQuery = Folder::where('department_id', $department->id);
+        if ($request->has('q')) {
+            $q = $request->query('q');
+            $folderQuery->where('folderName', 'like', "%$q%");
+        }
+        $folders = $folderQuery->get();
 
         return response()->json($folders->map(function ($folder) {
             return [

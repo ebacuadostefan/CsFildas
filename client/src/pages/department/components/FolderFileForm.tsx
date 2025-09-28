@@ -1,28 +1,30 @@
 import { useEffect, useState } from "react";
 import Modal from "../../../components/Modal";
 
-interface RenameFolderModalProps {
+interface RenameItemModalProps {
   isOpen: boolean;
-  currentFolderName: string;
+  currentName: string;
   onRename: (newName: string) => void;
   onClose: () => void;
+  title?: string;
 }
 
-const RenameFolderModal = ({
+const RenameItemModal = ({
   isOpen,
-  currentFolderName,
+  currentName,
   onRename,
   onClose,
-}: RenameFolderModalProps) => {
-  const [folderName, setFolderName] = useState(currentFolderName);
+  title = "Rename",
+}: RenameItemModalProps) => {
+  const [name, setName] = useState(currentName);
 
   useEffect(() => {
-    setFolderName(currentFolderName);
-  }, [currentFolderName]);
+    setName(currentName);
+  }, [currentName]);
 
   const handleSubmit = () => {
-    if (folderName.trim() && folderName !== currentFolderName) {
-      onRename(folderName.trim());
+    if (name.trim() && name !== currentName) {
+      onRename(name.trim());
     }
     onClose();
   };
@@ -30,11 +32,11 @@ const RenameFolderModal = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} showCloseButton>
       <div className="bg-white rounded-2xl p-2 w-full max-w-md">
-        <h2 className="text-lg font-semibold text-gray-700 mb-4">Rename</h2>
+        <h2 className="text-lg font-semibold text-gray-700 mb-4">{title}</h2>
         <input
           type="text"
-          value={folderName}
-          onChange={(e) => setFolderName(e.target.value)}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 mb-4"
         />
         <div className="flex justify-end space-x-2">
@@ -56,4 +58,4 @@ const RenameFolderModal = ({
   );
 };
 
-export default RenameFolderModal;
+export default RenameItemModal;

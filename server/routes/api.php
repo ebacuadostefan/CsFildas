@@ -24,9 +24,11 @@ Route::get('/folders/slug/{slug}', [FolderController::class, 'showBySlug']);
 Route::get('/folders/slug/{slug}/files', [FileController::class, 'indexBySlug']);
 Route::post('/folders/slug/{slug}/files', [FileController::class, 'storeBySlug']);
 Route::delete('/folders/slug/{slug}/files/{fileId}', [FileController::class, 'destroyBySlug']);
+Route::put('/folders/slug/{slug}/files/{fileId}', [FileController::class, 'renameBySlug']);
 
 Route::get('/folders/{folderId}/files', [FileController::class, 'index']);
 Route::post('/folders/{folderId}/files', [FileController::class, 'store']);
+Route::put('/files/{id}', [FileController::class, 'rename']);
 Route::delete('/files/{id}', [FileController::class, 'destroy']);
 
 Route::post('/login', function (Request $request) {

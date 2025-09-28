@@ -47,11 +47,15 @@ const AddDepartmentForm: React.FC<AddDepartmentFormProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !alias.trim()) return;
+    if (!image) {
+      alert("Image is required (max 5MB, jpg/jpeg/png/svg).");
+      return;
+    }
 
     const formData = new FormData();
     formData.append("name", name.trim());
     formData.append("alias", alias.trim());
-    if (image) formData.append("image", image);
+    formData.append("image", image);
 
     onSubmit(formData);
     setName("");

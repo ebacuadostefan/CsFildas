@@ -6,6 +6,7 @@ import Departments from "../pages/department/departmentMainPage";
 import Dashboard from "../pages/dashboardMainPage";
 import DepartmentFolderPage from "../pages/department/Folders/DepartmentFolderPage";
 import FolderPage from "../pages/department/Folders/FolderPage";
+import ActivityPage from "../pages/activityMainPage";
 
 // Optional: create a simple NotFound page
 const NotFoundPage = () => (
@@ -33,6 +34,8 @@ const AppRoutes = () => {
           path="departments/:slug/folders/:folderSlug"
           element={<FolderPage />}
         />
+        <Route  element={<ActivityPage />} path="activitypage"/>
+        
       </Route>
 
       {/*Catch-all route */}

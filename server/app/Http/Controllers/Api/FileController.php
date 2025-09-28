@@ -94,4 +94,33 @@ class FileController extends Controller
 
         return response()->json(['message' => 'File deleted successfully']);
     }
+
+    // Rename file by id
+    public function rename(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'fileName' => 'required|string|max:255',
+        ]);
+
+        $file = File::findOrFail($id);
+        $file->fileName = $validated['fileName'];
+        $file->save();
+
+        return response()->json($file, 200);
+    }
+
+    // Rename file by slug and fileId
+    public function renameBySlug(Request $request, $slug, $fileId)
+    {
+        $validated = $request->validate([
+            'fileName' => 'required|string|max:255',
+        ]);
+
+        $folder = Folder::where('slug', $slug)->firstOrFail();
+        $file = File::where('id', $fileId)->where('folder_id', $folder->id)->firstOrFail();
+        $file->fileName = $validated['fileName'];
+        $file->save();
+
+        return response()->json($file, 200);
+    }
 }

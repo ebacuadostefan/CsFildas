@@ -52,11 +52,14 @@ const AppHeader: React.FC<AppHeaderProps> = ({ onSidebarToggle }) => {
           {/* Left side: Logo + Sidebar toggle */}
           <div className="flex items-center space-x-2">
             {/* Logo */}
-            <img
-              src={logo}
-              alt="Filamer Logo"
-              className="w-8 h-8 rounded-full object-cover"
-            />
+            <div className="flex items-center space-x-2"> {/* Added a div to contain both logo and text, and apply flex for alignment */}
+  <img
+    src={logo}
+    alt="Filamer Logo"
+    className="w-8 h-8 rounded-full object-cover"
+  />
+  <span className="text-xl font-bold text-white">FiLDas</span> {/* Added for the logo name */}
+</div>
 
             {/* Sidebar toggle button */}
             <button
@@ -100,9 +103,9 @@ const AppHeader: React.FC<AppHeaderProps> = ({ onSidebarToggle }) => {
               {showSettings && (
                 <div
                   ref={dropdownRef}
-                  className="absolute right-0 mt-2 w-56 z-50 bg-white divide-y divide-gray-100 rounded-md shadow-lg dark:bg-gray-700 dark:divide-gray-600"
+                  className="absolute right-0 mt-1.5 mr-3 w-56 z-50 bg-white divide-y divide-gray-100 rounded-md shadow-lg dark:bg-gray-700 dark:divide-gray-600"
                 >
-                  <ul className="py-1">
+                  <ul className="py-2">
                     <li>
                       <a
                         href="#"

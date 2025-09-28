@@ -9,6 +9,7 @@ import Boxbar from "../../layout/Boxbar";
 import SelectionBar from "../../layout/SelectionBar";
 import Spinner from "../../components/Spinner/Spinner";
 import DeleteDepartmentModal from "./components/DeleteDepartmentModal";
+import RenameFolderModal from "./components/EditForm";
 
 const Departments = () => {
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -16,15 +17,21 @@ const Departments = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
+  const [selectedDepartments, setSelectedDepartments] = useState<number[]>([]);
   const [isEditing, setIsEditing] = useState(false);
+  const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
+  const [departmentToRename, setDepartmentToRename] =
+    useState<Department | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
+    const controller = new AbortController();
     const fetchDepartments = async () => {
       try {
         setLoading(true);
-        const data = await DepartmentServices.loadDepartments();
+        const data = await DepartmentServices.loadDepartments(
+          searchTerm || undefined
+        );
         setDepartments(data);
       } catch (error) {
         console.error("Failed to load departments:", error);
@@ -32,8 +39,12 @@ const Departments = () => {
         setLoading(false);
       }
     };
-    fetchDepartments();
-  }, []);
+    const id = setTimeout(fetchDepartments, 300);
+    return () => {
+      clearTimeout(id);
+      controller.abort();
+    };
+  }, [searchTerm]);
 
   const handleAddDepartment = async (formData: FormData) => {
     try {
@@ -45,7 +56,7 @@ const Departments = () => {
     }
   };
 
-  const handleCheckboxChange = (id: string) => {
+  const handleCheckboxChange = (id: number) => {
     setSelectedDepartments((prev) =>
       prev.includes(id) ? prev.filter((deptId) => deptId !== id) : [...prev, id]
     );
@@ -70,6 +81,50 @@ const Departments = () => {
       setIsDeleteModalOpen(false);
     } catch (error) {
       console.error("Failed to delete departments:", error);
+    }
+  };
+
+  const handleRenameDepartment = () => {
+    if (selectedDepartments.length === 1) {
+      const dept = departments.find((d) => d.id === selectedDepartments[0]);
+      if (dept) {
+        setDepartmentToRename(dept);
+        setIsRenameModalOpen(true);
+      }
+    }
+  };
+
+  const confirmRenameDepartment = async (newName: string) => {
+    if (!departmentToRename || !newName.trim()) return;
+    try {
+      const updated = await DepartmentServices.updateDepartment(
+        departmentToRename.id,
+        {
+          name: newName.trim(),
+          alias: newName.trim(),
+        }
+      );
+      setDepartments((prev) =>
+        prev.map((d) => (d.id === updated.id ? updated : d))
+      );
+      const now = new Date();
+      window.dispatchEvent(
+        new CustomEvent("app-activity", {
+          detail: {
+            id: Date.now(),
+            name: `Department renamed to "${updated.name}"`,
+            time: now.toLocaleTimeString(),
+            date: now.toLocaleDateString(),
+            status: "updated",
+          },
+        })
+      );
+      setIsRenameModalOpen(false);
+      setDepartmentToRename(null);
+      setSelectedDepartments([]);
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Failed to rename department:", error);
     }
   };
 
@@ -98,9 +153,10 @@ const Departments = () => {
         }}
         onEdit={() => setIsEditing((prev) => !prev)}
         onDelete={handleDeleteDepartments}
+        onRename={handleRenameDepartment}
       />
 
-      <div className="p-15 max-w-7xl mx-auto relative">
+      <div className="mt-10 w-full relative">
         {loading ? (
           <div className="flex justify-center items-center h-64">
             <Spinner size="lg" />
@@ -127,7 +183,7 @@ const Departments = () => {
                 return (
                   <div
                     key={dept.id}
-                    className={`bg-white rounded-lg shadow-lg flex flex-col items-center p-6 transition cursor-pointer relative
+                    className={`bg-white rounded-lg shadow-lg flex flex-col items-center p-7 transition cursor-pointer relative
                       ${isEditing && isSelected ? "ring-2 ring-blue-500" : ""}
                       hover:shadow-lg`}
                     onClick={handleCardClick}
@@ -185,6 +241,16 @@ const Departments = () => {
             .map((d) => d.name)}
           onDelete={confirmDeleteDepartments}
           onClose={() => setIsDeleteModalOpen(false)}
+        />
+
+        <RenameFolderModal
+          isOpen={isRenameModalOpen}
+          currentFolderName={departmentToRename?.name || ""}
+          onRename={confirmRenameDepartment}
+          onClose={() => {
+            setIsRenameModalOpen(false);
+            setDepartmentToRename(null);
+          }}
         />
       </div>
     </>

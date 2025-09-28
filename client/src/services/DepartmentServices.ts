@@ -32,8 +32,8 @@ const DepartmentServices = {
   // -------------------- DEPARTMENTS --------------------
 
   // Get all departments
-  loadDepartments: async (): Promise<Department[]> => {
-    const response = await AxiosInstance.get("/departments");
+  loadDepartments: async (q?: string): Promise<Department[]> => {
+    const response = await AxiosInstance.get("/departments", { params: q ? { q } : {} });
     return response.data;
   },
 
@@ -68,8 +68,8 @@ const DepartmentServices = {
   },
 
   // Get folders by department slug
-  getFoldersByDepartmentSlug: async (departmentSlug: string): Promise<Folder[]> => {
-    const response = await AxiosInstance.get(`/departments/${departmentSlug}/folders`);
+  getFoldersByDepartmentSlug: async (departmentSlug: string, q?: string): Promise<Folder[]> => {
+    const response = await AxiosInstance.get(`/departments/${departmentSlug}/folders`, { params: q ? { q } : {} });
     return response.data;
   },
 
@@ -123,6 +123,14 @@ const DepartmentServices = {
   // Delete file from folder
   deleteFile: async (slug: string, fileId: number): Promise<void> => {
     await AxiosInstance.delete(`/folders/slug/${slug}/files/${fileId}`);
+  },
+
+  // Rename file in folder by slug
+  renameFile: async (slug: string, fileId: number, newName: string): Promise<FileItem> => {
+    const response = await AxiosInstance.put(`/folders/slug/${slug}/files/${fileId}/edit`, {
+      fileName: newName,
+    });
+    return response.data;
   },
 };
 

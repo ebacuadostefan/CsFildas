@@ -53,7 +53,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, onClose }) => {
             </li>
             <li>
               <a
-                href="#"
+                href="/activitypage"
                 className="flex items-center p-2 text-white rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
               >
                 <span className="ms-3">Activity</span>
