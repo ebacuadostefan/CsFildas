@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import ActivityTable from "./component/ActivityTable";
 import Boxbar from "../layout/Boxbar";
 import SelectionBar from "../layout/SelectionBar";
