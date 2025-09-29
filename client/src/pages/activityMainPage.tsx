@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import ActivityTable from "./component/ActivityTable";
 import Boxbar from "../layout/Boxbar";
 import SelectionBar from "../layout/SelectionBar";
+import Spinner from "../components/Spinner/Spinner";
+// make sure the path is correct
 
 type Activity = {
   id: number;
@@ -17,12 +19,24 @@ const ActivityPage: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedActivities, setSelectedActivities] = useState<number[]>([]);
   const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // spinner state
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem("app-activities");
-      if (saved) setActivities(JSON.parse(saved));
-    } catch {}
+    // simulate loading delay (or real API call)
+    const loadActivities = async () => {
+      try {
+        const saved = localStorage.getItem("app-activities");
+        if (saved) {
+          setActivities(JSON.parse(saved));
+        }
+      } catch (error) {
+        console.error("Failed to load activities:", error);
+      } finally {
+        setIsLoading(false); // stop spinner
+      }
+    };
+
+    loadActivities();
 
     const handler = (e: Event) => {
       const detail = (e as CustomEvent<Activity>).detail;
@@ -45,7 +59,6 @@ const ActivityPage: React.FC = () => {
 
   const handleDeleteActivities = () => {
     if (selectedActivities.length === 0) return;
-    // Optimistic delete (replace with API calls if available)
     setActivities((prev) =>
       prev.filter((a) => !selectedActivities.includes(a.id))
     );
@@ -75,7 +88,13 @@ const ActivityPage: React.FC = () => {
         onDelete={handleDeleteActivities}
       />
       <div className="mt-10 w-full relative">
-        <ActivityTable activities={filteredActivities} />
+        {isLoading ? (
+          <div className="flex justify-center items-center h-64">
+            <Spinner size="lg" />
+          </div>
+        ) : (
+          <ActivityTable activities={filteredActivities} />
+        )}
       </div>
     </>
   );

@@ -17,7 +17,7 @@ const AddDepartmentForm: React.FC<AddDepartmentFormProps> = ({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleImageSelect = (file: File) => {
-    const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5MB (matches server 5120 KB)
+    const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
     if (!file.type.startsWith("image/")) return;
     if (file.size > MAX_SIZE_BYTES) {
       alert("Image is larger than 5MB. Please choose a smaller file.");
@@ -30,18 +30,13 @@ const AddDepartmentForm: React.FC<AddDepartmentFormProps> = ({
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-
     const file = e.dataTransfer.files?.[0];
-    if (file) {
-      handleImageSelect(file);
-    }
+    if (file) handleImageSelect(file);
   }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      handleImageSelect(file);
-    }
+    if (file) handleImageSelect(file);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -65,23 +60,29 @@ const AddDepartmentForm: React.FC<AddDepartmentFormProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 p-2">
-      <h2 className="text-lg font-semibold text-gray-700">
-        Add New Department
-      </h2>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Header */}
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-gray-800 mb-1">
+          Add Department
+        </h2>
+        <p className="text-gray-500 text-sm">
+          Create a new department and upload its logo.
+        </p>
+      </div>
 
-      {/* Drag-and-drop image upload */}
+      {/* Image Upload */}
       <div
         onDrop={handleDrop}
         onDragOver={(e) => e.preventDefault()}
         onClick={() => fileInputRef.current?.click()}
-        className="w-full border-2 border-dashed border-gray-300 rounded-md p-4 flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 transition"
+        className="w-full border-2 border-dashed border-gray-300 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 transition"
       >
         {preview ? (
           <img
             src={preview}
             alt="Preview"
-            className="w-32 h-32 object-cover rounded mb-2"
+            className="w-28 h-28 object-cover rounded-full mb-2 border-4 border-gray-200 shadow-sm"
           />
         ) : (
           <>
@@ -98,37 +99,63 @@ const AddDepartmentForm: React.FC<AddDepartmentFormProps> = ({
         />
       </div>
 
-      <input
-        type="text"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        placeholder="Department Name"
-        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-        required
-      />
+      {/* Inputs */}
+      <div className="space-y-4">
+        <div>
+          <label
+            htmlFor="name"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Department Name <span className="text-red-500">*</span>
+          </label>
+          <input
+            id="name"
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g., Human Resources"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg 
+              focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150"
+            required
+          />
+        </div>
 
-      <input
-        type="text"
-        value={alias}
-        onChange={(e) => setAlias(e.target.value)}
-        placeholder="Alias"
-        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-        required
-      />
+        <div>
+          <label
+            htmlFor="alias"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Alias / Short Name <span className="text-red-500">*</span>
+          </label>
+          <input
+            id="alias"
+            type="text"
+            value={alias}
+            onChange={(e) => setAlias(e.target.value)}
+            placeholder="e.g., HR"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg 
+              focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150"
+            required
+          />
+        </div>
+      </div>
 
-      <div className="flex justify-end space-x-2">
+      {/* Actions */}
+      <div className="flex justify-end space-x-3">
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+          className="px-5 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg 
+            hover:bg-gray-200 transition duration-150"
         >
           Cancel
         </button>
         <button
           type="submit"
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          className="px-5 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg 
+            hover:bg-blue-700 transition duration-150"
         >
-          Add
+          Add Department
         </button>
       </div>
     </form>

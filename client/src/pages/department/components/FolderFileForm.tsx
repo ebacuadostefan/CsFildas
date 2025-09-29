@@ -31,28 +31,34 @@ const RenameItemModal = ({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} showCloseButton>
-      <div className="bg-white rounded-2xl p-2 w-full max-w-md">
-        <h2 className="text-lg font-semibold text-gray-700 mb-4">{title}</h2>
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 mb-4"
-        />
-        <div className="flex justify-end space-x-2">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            Save
-          </button>
-        </div>
+      {/* Main content only (no extra container) */}
+      <h2 className="text-xl font-semibold text-gray-800 mb-4">{title}</h2>
+
+      <input
+        type="text"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        className="w-full px-4 py-2 border border-gray-300 rounded-lg 
+          focus:outline-none focus:ring-2 focus:ring-blue-500 transition mb-5"
+        autoFocus
+      />
+
+      <div className="flex justify-end space-x-3">
+        <button
+          onClick={onClose}
+          className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 
+            hover:bg-gray-200 transition"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handleSubmit}
+          disabled={!name.trim() || name === currentName}
+          className="px-5 py-2 rounded-lg bg-blue-600 text-white 
+            hover:bg-blue-700 transition disabled:opacity-50"
+        >
+          Save
+        </button>
       </div>
     </Modal>
   );

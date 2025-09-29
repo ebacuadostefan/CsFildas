@@ -69,6 +69,22 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Footer Section */}
+      <footer className="mt-12 bg-blue-50 border-t border-blue-200 rounded-xl p-6 text-center shadow-inner">
+        <h2 className="text-2xl font-bold text-blue-700">FILDAS</h2>
+        <p className="text-gray-600 mt-2 max-w-2xl mx-auto">
+          FILDAS (Filamer Quality Assurance System) is designed to ensure
+          academic and institutional excellence through systematic audits,
+          reporting, and monitoring. Our mission is to promote transparency,
+          consistency, and continuous improvement across all quality assurance
+          processes.
+        </p>
+        <p className="text-gray-500 text-sm mt-4">
+          © {new Date().getFullYear()} FILDAS - Quality Assurance System. All
+          rights reserved.
+        </p>
+      </footer>
     </div>
   );
 };

@@ -18,11 +18,11 @@ const Headbar: React.FC<HeadbarProps> = ({
         <Breadcrumbs />
       </h1>
 
-      {/* Search + Add */}
+      {/* Search bar */}
       <div className="flex items-center shadow-lg gap-2 w-full sm:w-auto">
         <input
           type="text"
-          placeholder="Search"
+          placeholder="Search..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="flex-1 sm:flex-none w-full max-w-md px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"

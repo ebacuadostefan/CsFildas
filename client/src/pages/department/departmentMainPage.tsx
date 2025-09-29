@@ -92,21 +92,22 @@ const Departments = () => {
         setIsRenameModalOpen(true);
       }
     }
-  };
+  }; //  2: Updated to accept FormData directly from the RenameFolderModal
 
-  const confirmRenameDepartment = async (newName: string) => {
-    if (!departmentToRename || !newName.trim()) return;
+  const confirmRenameDepartment = async (formData: FormData) => {
+    if (!departmentToRename) return;
+
     try {
+      // FormData already contains 'name', 'alias', 'image' (if set), and '_method: PUT' (from modal fix)
       const updated = await DepartmentServices.updateDepartment(
         departmentToRename.id,
-        {
-          name: newName.trim(),
-          alias: newName.trim(),
-        }
+        formData
       );
+
       setDepartments((prev) =>
         prev.map((d) => (d.id === updated.id ? updated : d))
       );
+
       const now = new Date();
       window.dispatchEvent(
         new CustomEvent("app-activity", {
@@ -119,6 +120,7 @@ const Departments = () => {
           },
         })
       );
+
       setIsRenameModalOpen(false);
       setDepartmentToRename(null);
       setSelectedDepartments([]);
@@ -126,20 +128,26 @@ const Departments = () => {
     } catch (error) {
       console.error("Failed to rename department:", error);
     }
-  };
+  }; //  Updated to search by name, alias, OR slug.
 
-  const filteredDepartments = departments.filter((dept) =>
-    dept.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredDepartments = departments.filter((dept) => {
+    const lowerSearchTerm = searchTerm.toLowerCase();
+    const nameMatch = dept.name.toLowerCase().includes(lowerSearchTerm);
+    const aliasMatch = dept.alias?.toLowerCase().includes(lowerSearchTerm);
+    const slugMatch = dept.slug?.toLowerCase().includes(lowerSearchTerm);
+
+    return nameMatch || aliasMatch || slugMatch;
+  });
 
   return (
     <>
+           {" "}
       <Boxbar
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         onAdd={() => setIsAddModalOpen(true)}
       />
-
+           {" "}
       <SelectionBar
         onAdd={() => setIsAddModalOpen(true)}
         totalItems={filteredDepartments.length}
@@ -151,15 +159,19 @@ const Departments = () => {
             selectAll ? filteredDepartments.map((d) => d.id) : []
           );
         }}
-        onEdit={() => setIsEditing((prev) => !prev)}
+        onEdit={() => {
+          setIsEditing((prev) => !prev);
+          setSelectedDepartments([]); // Clear selection when exiting edit mode
+        }}
         onDelete={handleDeleteDepartments}
         onRename={handleRenameDepartment}
       />
-
+           {" "}
       <div className="mt-10 w-full relative">
+               {" "}
         {loading ? (
           <div className="flex justify-center items-center h-64">
-            <Spinner size="lg" />
+                        <Spinner size="lg" />         {" "}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
@@ -183,33 +195,46 @@ const Departments = () => {
                 return (
                   <div
                     key={dept.id}
-                    className={`bg-white rounded-lg shadow-lg flex flex-col items-center p-7 transition cursor-pointer relative
-                      ${isEditing && isSelected ? "ring-2 ring-blue-500" : ""}
-                      hover:shadow-lg`}
+                    className={`bg-white rounded-xl shadow-md flex flex-col items-center p-6 transition cursor-pointer relative
+            ${isEditing && isSelected ? "ring-2 ring-blue-500" : ""}
+            hover:shadow-xl`}
                     onClick={handleCardClick}
                   >
+                    {/* Checkbox (edit mode only) */}
                     {isEditing && (
                       <input
                         type="checkbox"
                         checked={isSelected}
                         onChange={() => handleCheckboxChange(dept.id)}
-                        className="absolute top-2 right-2 w-3 h-3 cursor-pointer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute top-3 right-3 w-4 h-4 cursor-pointer"
                       />
                     )}
 
+                    {/* Department Image */}
                     {dept.image ? (
                       <img
                         src={dept.image}
                         alt={dept.name}
-                        className="w-20 h-20 sm:w-24 sm:h-24 rounded-full mb-4 object-cover"
+                        className="w-24 h-24 rounded-full mb-3 object-cover border-2 border-gray-200"
                       />
                     ) : (
-                      <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-300 rounded-full mb-4"></div>
+                      <div className="w-24 h-24 bg-gray-200 rounded-full mb-3 flex items-center justify-center text-gray-500 text-xs">
+                        No Image
+                      </div>
                     )}
 
-                    <p className="text-center font-medium text-gray-700 uppercase text-sm">
+                    {/* Department Name */}
+                    <h3 className="text-center text-gray-900 font-semibold uppercase text-sm sm:text-base">
                       {dept.name}
-                    </p>
+                    </h3>
+
+                    {/* Department Alias */}
+                    {dept.alias && (
+                      <p className="text-xs text-gray-500 italic mt-1">
+                        {dept.alias}
+                      </p>
+                    )}
                   </div>
                 );
               })
@@ -220,20 +245,20 @@ const Departments = () => {
             )}
           </div>
         )}
-
-        {/* Add Department Modal */}
+                {/* Add Department Modal */}       {" "}
         <Modal
           isOpen={isAddModalOpen}
           onClose={() => setIsAddModalOpen(false)}
           showCloseButton
         >
+                   {" "}
           <AddDepartmentForm
             onSubmit={handleAddDepartment}
             onCancel={() => setIsAddModalOpen(false)}
           />
+                 {" "}
         </Modal>
-
-        {/* Delete Confirmation Modal */}
+                {/* Delete Confirmation Modal */}       {" "}
         <DeleteDepartmentModal
           isOpen={isDeleteModalOpen}
           departmentNames={departments
@@ -242,17 +267,21 @@ const Departments = () => {
           onDelete={confirmDeleteDepartments}
           onClose={() => setIsDeleteModalOpen(false)}
         />
-
+                {/* 🔹 Updated rename modal */}       {" "}
         <RenameFolderModal
           isOpen={isRenameModalOpen}
           currentFolderName={departmentToRename?.name || ""}
+          currentAlias={departmentToRename?.alias || ""}
+          currentImage={departmentToRename?.image}
           onRename={confirmRenameDepartment}
           onClose={() => {
             setIsRenameModalOpen(false);
             setDepartmentToRename(null);
           }}
         />
+             {" "}
       </div>
+         {" "}
     </>
   );
 };

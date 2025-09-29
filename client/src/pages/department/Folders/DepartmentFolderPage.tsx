@@ -2,11 +2,9 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import DepartmentServices from "../../../services/DepartmentServices";
 import Spinner from "../../../components/Spinner/Spinner";
-
 import Boxbar from "../../../layout/Boxbar";
 import DeleteDepartmentModal from "../components/DeleteDepartmentModal";
-import SelectionBar from "../../../layout/SelectionBar";
-// import your modal
+import SelectionBar from "../../../layout/SelectionBar"; // import your modal
 import AddFolderModal from "./Components/AddFolderForm";
 import RenameItemModal from "../../department/components/FolderFileForm";
 

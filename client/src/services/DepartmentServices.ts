@@ -47,12 +47,15 @@ const DepartmentServices = {
 
   // Update department
   updateDepartment: async (
-    id: number,
-    department: Partial<Department>
-  ): Promise<Department> => {
-    const response = await AxiosInstance.put(`/departments/${id}`, department);
+  id: number, formData: FormData
+): Promise<Department> => {
+    // 💥 FIX 2: Change the request method from PUT to POST to handle multipart/form-data.
+    // The '_method: "PUT"' field in the FormData handles the actual update method on the backend.
+    const response = await AxiosInstance.post(`/departments/${id}`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     return response.data;
-  },
+},
 
   // Delete department
   destroyDepartment: async (id: number): Promise<void> => {

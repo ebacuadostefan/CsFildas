@@ -3,14 +3,11 @@ import { useParams } from "react-router-dom";
 import type { Folder, FileItem } from "../../../services/DepartmentServices";
 import DepartmentServices from "../../../services/DepartmentServices";
 import FilesTable from "./Files/FileTable";
-
 import Spinner from "../../../components/Spinner/Spinner";
 import Headbar from "../../../layout/Boxbar";
 import SelectionBar from "../../../layout/SelectionBar";
 import DeleteFolderModal from "./Components/DeleteForm";
 import RenameItemModal from "../../department/components/FolderFileForm";
-
-// New shortcut component
 
 const FolderPage = () => {
   const { folderSlug } = useParams<{ slug: string; folderSlug: string }>();
@@ -25,7 +22,20 @@ const FolderPage = () => {
   const [fileToRename, setFileToRename] = useState<FileItem | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null!);
 
-  // Fetch folder and files
+  // Helpers
+  const getFileNameOnly = (fileName: string) => {
+    return fileName.replace(/\.[^/.]+$/, ""); // remove extension
+  };
+
+  const getFileExtension = (fileName: string) => {
+    const ext = fileName.split(".").pop()?.toLowerCase();
+    if (!ext) return "Unknown";
+
+    const allowed = ["pdf", "doc", "docx", "png", "jpg", "jpeg"];
+    return allowed.includes(ext) ? `.${ext}` : "Unknown";
+  };
+
+  // Fetch folder + files
   useEffect(() => {
     if (!folderSlug) return;
 
@@ -37,50 +47,44 @@ const FolderPage = () => {
       ])
         .then(([folderData, filesData]) => {
           setFolder(folderData);
-          setFiles(
-            searchTerm
-              ? filesData.filter((f) =>
-                  f.fileName.toLowerCase().includes(searchTerm.toLowerCase())
-                )
-              : filesData
-          );
+          setFiles(filesData);
         })
         .catch((err) => console.error("Error loading folder:", err))
         .finally(() => setLoading(false));
     }, 300);
-    return () => clearTimeout(id);
-  }, [folderSlug, searchTerm]);
 
+    return () => clearTimeout(id);
+  }, [folderSlug]);
+
+  // File click logic
   const handleFileClick = (file: FileItem) => {
     if (isEditing) {
       handleCheckboxChange(file.id);
+      return;
+    }
+
+    const fullUrl = `http://localhost:8000${file.filePath}`;
+    const extension = getFileExtension(file.fileName);
+
+    if (extension === ".doc" || extension === ".docx") {
+      const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(
+        fullUrl
+      )}&embedded=true`;
+      window.open(viewerUrl, "_blank");
     } else {
-      const fullUrl = `http://localhost:8000${file.filePath}`;
-      if (file.fileType?.includes("pdf") || file.fileType?.includes("image")) {
-        window.open(fullUrl, "_blank");
-      } else if (
-        file.fileType?.includes("doc") ||
-        file.fileType?.includes("docx")
-      ) {
-        const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(
-          fullUrl
-        )}&embedded=true`;
-        window.open(viewerUrl, "_blank");
-      } else {
-        window.open(fullUrl, "_blank");
-      }
+      window.open(fullUrl, "_blank");
     }
   };
 
+  // Checkbox
   const handleCheckboxChange = (id: number) => {
     setSelectedFiles((prev) =>
       prev.includes(id) ? prev.filter((fileId) => fileId !== id) : [...prev, id]
     );
   };
 
-  const handleUploadClick = () => {
-    fileInputRef.current?.click();
-  };
+  // Upload
+  const handleUploadClick = () => fileInputRef.current?.click();
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = e.target.files;
@@ -92,23 +96,12 @@ const FolderPage = () => {
       );
       const newFiles = await Promise.all(uploadPromises);
       setFiles((prev) => [...prev, ...newFiles]);
-      const now = new Date();
-      window.dispatchEvent(
-        new CustomEvent("app-activity", {
-          detail: {
-            id: Date.now(),
-            name: `Uploaded ${newFiles.length} file(s)`,
-            time: now.toLocaleTimeString(),
-            date: now.toLocaleDateString(),
-            status: "created",
-          },
-        })
-      );
     } catch (error) {
       console.error("Failed to upload files:", error);
     }
   };
 
+  // Delete
   const handleDeleteFiles = () => {
     if (selectedFiles.length > 0) setIsDeleteModalOpen(true);
   };
@@ -120,18 +113,6 @@ const FolderPage = () => {
         selectedFiles.map((id) => DepartmentServices.deleteFile(folderSlug, id))
       );
       setFiles((prev) => prev.filter((f) => !selectedFiles.includes(f.id)));
-      const now = new Date();
-      window.dispatchEvent(
-        new CustomEvent("app-activity", {
-          detail: {
-            id: Date.now(),
-            name: `Deleted ${selectedFiles.length} file(s)`,
-            time: now.toLocaleTimeString(),
-            date: now.toLocaleDateString(),
-            status: "deleted",
-          },
-        })
-      );
       setSelectedFiles([]);
       setIsEditing(false);
       setIsDeleteModalOpen(false);
@@ -140,6 +121,7 @@ const FolderPage = () => {
     }
   };
 
+  // Rename
   const handleRenameFile = () => {
     if (selectedFiles.length === 1) {
       const file = files.find((f) => f.id === selectedFiles[0]);
@@ -159,33 +141,30 @@ const FolderPage = () => {
         newName.trim()
       );
       setFiles((prev) => prev.map((f) => (f.id === updated.id ? updated : f)));
-      const now = new Date();
-      window.dispatchEvent(
-        new CustomEvent("app-activity", {
-          detail: {
-            id: Date.now(),
-            name: `File renamed to "${updated.fileName}"`,
-            time: now.toLocaleTimeString(),
-            date: now.toLocaleDateString(),
-            status: "updated",
-          },
-        })
-      );
       setIsRenameModalOpen(false);
       setFileToRename(null);
+      setSelectedFiles([]);
     } catch (err) {
       console.error("Failed to rename file:", err);
     }
   };
 
-  const filteredFiles = files.filter((file) =>
-    file.fileName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Format before passing to FilesTable
+  const filteredFiles = files
+    .filter((file) =>
+      getFileNameOnly(file.fileName)
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase())
+    )
+    .map((file) => ({
+      ...file,
+      displayName: getFileNameOnly(file.fileName),
+      displayType: getFileExtension(file.fileName),
+    }));
 
-  // Loading spinner
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64 mt-10">
+      <div className="flex justify-center items-center h-64">
         <Spinner size="lg" />
       </div>
     );
@@ -193,20 +172,10 @@ const FolderPage = () => {
 
   return (
     <>
-      {/* Headbar with Upload button */}
       <Headbar
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         onAdd={handleUploadClick}
-      />
-
-      {/* Hidden file input for uploads (triggered by Add/Upload button) */}
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-        className="hidden"
-        multiple
       />
 
       <SelectionBar
@@ -214,7 +183,10 @@ const FolderPage = () => {
         totalItems={filteredFiles.length}
         selectedItems={selectedFiles.length}
         isEditing={isEditing}
-        onEdit={() => setIsEditing((prev) => !prev)}
+        onEdit={() => {
+          setIsEditing((prev) => !prev);
+          setSelectedFiles([]);
+        }}
         onSelectAll={(selectAll: boolean) => {
           if (!isEditing) return;
           setSelectedFiles(selectAll ? filteredFiles.map((f) => f.id) : []);
@@ -226,29 +198,47 @@ const FolderPage = () => {
         renameLabel="Rename"
       />
 
-      {/* Main Content Area */}
-      <div className="mt-10 w-full relative">
-        {/* Upload Bar Shortcut */}
+      <div className="mt-10">
+        {/* Header bar */}
 
-        {/* Files Table */}
-        <FilesTable
-          files={filteredFiles}
-          onFileClick={handleFileClick}
-          onDeleteClick={(file) => {
-            setSelectedFiles([file.id]);
-            setIsDeleteModalOpen(true);
-          }}
-          selectedFiles={selectedFiles}
-          isEditing={isEditing}
-          onCheckboxChange={handleCheckboxChange}
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          className="hidden"
+          multiple
         />
 
-        {/* Delete Modal */}
+        {/* Action bar */}
+
+        {/* Content */}
+        <div className="bg-white rounded-xl shadow-md p-4">
+          {filteredFiles.length > 0 ? (
+            <FilesTable
+              files={filteredFiles}
+              onFileClick={handleFileClick}
+              onDeleteClick={(file) => {
+                setSelectedFiles([file.id]);
+                setIsDeleteModalOpen(true);
+              }}
+              selectedFiles={selectedFiles}
+              isEditing={isEditing}
+              onCheckboxChange={handleCheckboxChange}
+            />
+          ) : (
+            <div className="text-center text-gray-500 py-10">
+              <p className="text-lg font-medium">No files found</p>
+              <p className="text-sm">Upload files to get started</p>
+            </div>
+          )}
+        </div>
+
+        {/* Delete modal */}
         <DeleteFolderModal
           isOpen={isDeleteModalOpen}
           folderName={files
             .filter((f) => selectedFiles.includes(f.id))
-            .map((f) => f.fileName)
+            .map((f) => getFileNameOnly(f.fileName))
             .join(", ")}
           onDelete={confirmDeleteFiles}
           onClose={() => {
@@ -257,9 +247,12 @@ const FolderPage = () => {
           }}
         />
 
+        {/* Rename modal */}
         <RenameItemModal
           isOpen={isRenameModalOpen}
-          currentName={fileToRename?.fileName || ""}
+          currentName={
+            fileToRename ? getFileNameOnly(fileToRename.fileName) : ""
+          }
           onRename={confirmRenameFile}
           onClose={() => {
             setIsRenameModalOpen(false);

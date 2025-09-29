@@ -15,10 +15,20 @@ class DepartmentController extends Controller
     public function index(Request $request)
     {
         $query = Department::query();
+        
+        // --- UPDATED SEARCH LOGIC (DEPARTMENT) ---
         if ($request->has('q')) {
-            $q = $request->query('q');
-            $query->where('name', 'like', "%$q%");
+            $searchTerm = $request->query('q');
+            
+            // Apply grouped OR conditions to search across name, alias, and slug
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('name', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('alias', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('slug', 'like', '%' . $searchTerm . '%');
+            });
         }
+        // --- END UPDATED SEARCH LOGIC ---
+        
         $departments = $query->get();
 
         // Transform image into full URL
@@ -120,19 +130,29 @@ class DepartmentController extends Controller
     {
         $department = Department::where('slug', $slug)->firstOrFail();
         $folderQuery = Folder::where('department_id', $department->id);
+        
+        // --- UPDATED FOLDER SEARCH LOGIC ---
         if ($request->has('q')) {
-            $q = $request->query('q');
-            $folderQuery->where('folderName', 'like', "%$q%");
+            $searchTerm = $request->query('q');
+            
+            // Apply grouped OR conditions to search across folderName, description, and slug
+            $folderQuery->where(function ($q) use ($searchTerm) {
+                $q->where('folderName', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('description', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('slug', 'like', '%' . $searchTerm . '%');
+            });
         }
+        // --- END UPDATED FOLDER SEARCH LOGIC ---
+
         $folders = $folderQuery->get();
 
         return response()->json($folders->map(function ($folder) {
             return [
-                'id'          => $folder->id,
-                'folderName'  => $folder->folderName,
-                'description' => $folder->description,
-                'slug'        => $folder->slug,
-                'departmentId'=> $folder->department_id,
+                'id'            => $folder->id,
+                'folderName'    => $folder->folderName,
+                'description'   => $folder->description,
+                'slug'          => $folder->slug,
+                'departmentId'  => $folder->department_id,
             ];
         }));
     }
@@ -155,11 +175,11 @@ class DepartmentController extends Controller
         ]);
 
         return response()->json([
-            'id'          => $folder->id,
-            'folderName'  => $folder->folderName,
-            'description' => $folder->description,
-            'slug'        => $folder->slug,
-            'departmentId'=> $folder->department_id,
+            'id'            => $folder->id,
+            'folderName'    => $folder->folderName,
+            'description'   => $folder->description,
+            'slug'          => $folder->slug,
+            'departmentId'  => $folder->department_id,
         ], 201);
     }
 }
