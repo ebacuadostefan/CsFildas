@@ -1,5 +1,5 @@
 import Filamer from "../assets/img/dp.jpg";
-import { FaTachometerAlt, FaBuilding, FaClipboardList } from "react-icons/fa";
+import { FaTachometerAlt, FaBuilding, FaClipboardList, FaTrash, FaUser, FaArchive } from "react-icons/fa";
 
 interface AppSidebarProps {
   isOpen: boolean; // control sidebar visibility from parent
@@ -63,6 +63,26 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, onClose }) => {
                 <span className="ms-3">Activity</span>
               </a>
             </li>
+              <li>
+                <a
+                  href="*"
+                  className="flex items-center p-2 text-white rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+                >
+                  <FaArchive className="text-white group-hover:text-gray-700 dark:group-hover:text-gray-200" />
+                  <span className="ms-3">Archive</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/users"
+                  className="flex items-center p-2 text-white rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+                >
+                  <FaUser className="text-white group-hover:text-gray-700 dark:group-hover:text-gray-200" />
+                  <span className="ms-3">User</span>
+                </a>
+              </li>
+            
+
           </ul>
         </div>
       </aside>

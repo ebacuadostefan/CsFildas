@@ -1,12 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import DepartmentServices from "../../../services/DepartmentServices";
 import Spinner from "../../../components/Spinner/Spinner";
 import Boxbar from "../../../layout/Boxbar";
 import DeleteDepartmentModal from "../components/DeleteDepartmentModal";
-import SelectionBar from "../../../layout/SelectionBar"; // import your modal
+import SelectionBar from "../../../layout/SelectionBar";
 import AddFolderModal from "./Components/AddFolderForm";
 import RenameItemModal from "../../department/components/FolderFileForm";
+import { HiDotsVertical } from "react-icons/hi";
+import { FaFolder } from "react-icons/fa";
 
 interface DepartmentFolder {
   id: number;
@@ -29,51 +31,76 @@ const DepartmentFolderPage = () => {
   const [folderToRename, setFolderToRename] = useState<DepartmentFolder | null>(
     null
   );
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
 
-  useEffect(() => {
+  // --- Data Fetching Logic (using useCallback for consistency) ---
+  const fetchFolders = useCallback(() => {
     if (!slug) return;
 
-    const id = setTimeout(() => {
-      setLoading(true);
-      DepartmentServices.getFoldersByDepartmentSlug(
-        slug,
-        searchTerm || undefined
-      )
-        .then(setFolders)
-        .catch(console.error)
-        .finally(() => setLoading(false));
-    }, 300);
-    return () => clearTimeout(id);
+    setLoading(true);
+    DepartmentServices.getFoldersByDepartmentSlug(slug, searchTerm || undefined)
+      .then(setFolders)
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }, [slug, searchTerm]);
 
-  // Checkbox selection
+  useEffect(() => {
+    const id = setTimeout(fetchFolders, 300);
+    return () => clearTimeout(id);
+  }, [fetchFolders]);
+
+  // --- Selection and Action Handlers ---
+
   const handleCheckboxChange = (id: number) => {
     setSelectedFolders((prev) =>
       prev.includes(id) ? prev.filter((fid) => fid !== id) : [...prev, id]
     );
   };
 
-  // Delete selected folders
-  const handleDeleteFolders = async () => {
+  const handleDeleteFolders = (folderId?: number) => {
+    if (folderId) {
+      const folder = folders.find((f) => f.id === folderId);
+      if (folder) {
+        setFolderToRename(folder);
+        setSelectedFolders([folderId]);
+        setIsDeleteModalOpen(true);
+        setOpenMenuId(null);
+      }
+    } else if (selectedFolders.length > 0) {
+      setFolderToRename(null);
+      setIsDeleteModalOpen(true);
+    }
+  };
+
+  const confirmDeleteFolders = async () => {
+    const idsToDelete = folderToRename ? [folderToRename.id] : selectedFolders;
+
+    if (idsToDelete.length === 0) return;
+
     try {
       await Promise.all(
-        selectedFolders.map((id) => DepartmentServices.deleteFolder(id))
+        idsToDelete.map((id) => DepartmentServices.deleteFolder(id))
       );
-      setFolders((prev) => prev.filter((f) => !selectedFolders.includes(f.id)));
+      setFolders((prev) => prev.filter((f) => !idsToDelete.includes(f.id)));
+
+      // Activity logging
       const now = new Date();
       window.dispatchEvent(
         new CustomEvent("app-activity", {
           detail: {
             id: Date.now(),
-            name: `Deleted ${selectedFolders.length} folder(s)`,
+            name: `Deleted ${idsToDelete.length} folder(s)`,
             time: now.toLocaleTimeString(),
             date: now.toLocaleDateString(),
             status: "deleted",
           },
         })
       );
+
       setSelectedFolders([]);
       setIsEditing(false);
+      setIsDeleteModalOpen(false);
+      setFolderToRename(null);
     } catch (error) {
       console.error("Failed to delete folders:", error);
     }
@@ -91,6 +118,7 @@ const DepartmentFolderPage = () => {
       );
       setFolders((prev) => [...prev, newFolder]);
       setIsAddModalOpen(false);
+      // Activity logging...
       const now = new Date();
       window.dispatchEvent(
         new CustomEvent("app-activity", {
@@ -108,14 +136,20 @@ const DepartmentFolderPage = () => {
     }
   };
 
-  // Rename folder
-  const handleRenameFolder = () => {
-    if (selectedFolders.length === 1) {
-      const folder = folders.find((f) => f.id === selectedFolders[0]);
-      if (folder) {
-        setFolderToRename(folder);
-        setIsRenameModalOpen(true);
-      }
+  const handleRenameFolder = (folderId?: number) => {
+    let idToRename = folderId;
+
+    if (!idToRename && selectedFolders.length === 1) {
+      idToRename = selectedFolders[0];
+    } else if (!idToRename) {
+      return;
+    }
+
+    const folder = folders.find((f) => f.id === idToRename);
+    if (folder) {
+      setFolderToRename(folder);
+      setIsRenameModalOpen(true);
+      setOpenMenuId(null);
     }
   };
 
@@ -128,6 +162,7 @@ const DepartmentFolderPage = () => {
       setFolders((prev) =>
         prev.map((f) => (f.id === updated.id ? updated : f))
       );
+      // Activity logging...
       const now = new Date();
       window.dispatchEvent(
         new CustomEvent("app-activity", {
@@ -149,9 +184,31 @@ const DepartmentFolderPage = () => {
     }
   };
 
+  // --- Utility/Menu Logic ---
+
   const filteredFolders = folders.filter((folder) =>
     folder.folderName.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const toggleMenu = (folderId: number) => {
+    setOpenMenuId(openMenuId === folderId ? null : folderId);
+  };
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const closeMenu = (event: MouseEvent) => {
+      if (
+        openMenuId !== null &&
+        !(event.target as HTMLElement).closest("[data-menu-trigger]")
+      ) {
+        setOpenMenuId(null);
+      }
+    };
+    window.addEventListener("click", closeMenu);
+    return () => window.removeEventListener("click", closeMenu);
+  }, [openMenuId]);
+
+  // --- Render ---
 
   return (
     <>
@@ -166,14 +223,17 @@ const DepartmentFolderPage = () => {
         totalItems={filteredFolders.length}
         selectedItems={selectedFolders.length}
         isEditing={isEditing}
-        onEdit={() => setIsEditing((prev) => !prev)}
+        onEdit={() => {
+          setIsEditing((prev) => !prev);
+          setSelectedFolders([]);
+          setOpenMenuId(null);
+        }}
         onSelectAll={(selectAll) =>
           setSelectedFolders(selectAll ? filteredFolders.map((f) => f.id) : [])
         }
-        onDelete={() => setIsDeleteModalOpen(true)} // open modal
-        onRename={handleRenameFolder}
+        onDelete={() => handleDeleteFolders()}
+        onRename={() => handleRenameFolder()}
       />
-
       <div className="mt-10 w-full relative">
         {loading ? (
           <div className="flex justify-center items-center py-20">
@@ -181,62 +241,106 @@ const DepartmentFolderPage = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {filteredFolders.map((folder) => (
-              <div
-                key={folder.id}
-                className="bg-white shadow-md rounded-md p-4 flex items-center space-x-4 hover:bg-gray-200 transition cursor-pointer relative"
-              >
-                {isEditing && (
-                  <input
-                    type="checkbox"
-                    checked={selectedFolders.includes(folder.id)}
-                    onChange={() => handleCheckboxChange(folder.id)}
-                    className="absolute top-2 right-2 w-3 h-3 cursor-pointer"
-                    onFocus={(e) => e.stopPropagation()}
-                  />
-                )}
+            {filteredFolders.map((folder) => {
+              const isSelected = selectedFolders.includes(folder.id);
+              const isMenuOpen = openMenuId === folder.id;
 
-                <div className="flex items-center space-x-2">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-7 w-7 text-gray-500 flex-shrink-0"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-                    />
-                  </svg>
-                  <span
-                    className="text-gray-800 font-medium truncate"
-                    onClick={() =>
-                      navigate(`/departments/${slug}/folders/${folder.slug}`)
-                    }
-                  >
-                    {folder.folderName}
-                  </span>
+              const handleCardClick = () => {
+                if (isEditing) {
+                  handleCheckboxChange(folder.id);
+                } else {
+                  navigate(`/departments/${slug}/folders/${folder.slug}`);
+                }
+              };
+
+              return (
+                <div
+                  key={folder.id}
+                  className={`bg-white shadow-md rounded-md p-4 flex items-center space-x-4 transition cursor-pointer relative
+                      ${isEditing && isSelected ? "ring-2 ring-blue-500" : ""} 
+                      hover:shadow-xl`}
+                  onClick={handleCardClick}
+                >
+                  {/* --- Content --- */}
+                  {/* IMPORTANT: Ensure 'min-w-0' is on the container and the name element. */}
+                  <div className="flex items-center space-x-2 flex-grow min-w-0">
+                    {/* Folder Icon */}
+                    <FaFolder className="h-7 w-7 text-gray-500 flex-shrink-0" />
+
+                    {/* Folder Name - Added 'inline-block' for flow and 'min-w-0' for consistent truncation */}
+                    <span className="text-gray-800 font-medium **inline-block** min-w-0 overflow-hidden truncate">
+                      {folder.folderName}
+                    </span>
+                  </div>
+
+                  {/* --- Three-Dot Menu --- */}
+                  {!isEditing ? (
+                    <div className="absolute top-2 right-2 flex-shrink-0">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleMenu(folder.id);
+                        }}
+                        className="p-1 rounded-full hover:bg-gray-100"
+                        data-menu-trigger
+                      >
+                        <HiDotsVertical className="w-3 h-3 text-gray-500" />
+                      </button>
+
+                      {/* Dropdown Menu */}
+                      {isMenuOpen && (
+                        <div
+                          className="absolute right-0 mt-1 w-32 bg-white rounded-md shadow-lg z-10 ring-1 ring-black ring-opacity-5 focus:outline-none"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="py-1">
+                            <button
+                              className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                              onClick={() => handleRenameFolder(folder.id)}
+                            >
+                              Rename
+                            </button>
+                            <button
+                              className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                              onClick={() => handleDeleteFolders(folder.id)}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    // Placeholder for when not editing
+                    <div className="absolute top-2 right-2">
+                      {isSelected && <div className="w-5 h-5"></div>}
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
 
-      {/* Delete Folder Modal */}
+      {/* --- Modals (Unchanged Logic) --- */}
+
       <DeleteDepartmentModal
         isOpen={isDeleteModalOpen}
-        departmentNames={folders
-          .filter((f) => selectedFolders.includes(f.id))
-          .map((f) => f.folderName)}
-        onDelete={handleDeleteFolders}
-        onClose={() => setIsDeleteModalOpen(false)}
+        departmentNames={
+          folderToRename
+            ? [folderToRename.folderName]
+            : folders
+                .filter((f) => selectedFolders.includes(f.id))
+                .map((f) => f.folderName)
+        }
+        onDelete={confirmDeleteFolders}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setFolderToRename(null);
+        }}
       />
 
-      {/* Add Folder Modal */}
       <AddFolderModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}

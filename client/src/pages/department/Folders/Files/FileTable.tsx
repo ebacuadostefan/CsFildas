@@ -40,7 +40,7 @@ const FilesTable = ({
               {files.map((file) => (
                 <tr
                   key={file.id}
-                  className="hover:bg-gray-50 transition border-b last:border-none"
+                  className="hover:bg-gray-100 transition shadow-md last:border-none"
                 >
                   {isEditing && (
                     <td className="px-4 py-2">

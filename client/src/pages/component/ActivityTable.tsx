@@ -16,13 +16,14 @@ const ActivityTable: React.FC<Props> = ({ activities }) => {
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full text-sm text-center border border-gray-300">
-        <thead className="bg-gray-300 text-xs uppercase font-medium">
+        <thead className="bg-gray-300 text-xs uppercase text-gray-800 font-medium">
           <tr>
-            <th className="px-4 py-3 border border-gray-300">No</th>
-            <th className="px-4 py-3 border border-gray-300">Action</th>
-            <th className="px-4 py-3 border border-gray-300">Time</th>
-            <th className="px-4 py-3 border border-gray-300">Date</th>
-            <th className="px-4 py-3 border border-gray-300">Status</th>
+            <th className="p-2 py-1 border border-gray-300">Id</th>
+            <th className="p-2 py-1 border border-gray-300">department</th>
+            <th className="p-2 py-1 border border-gray-300">Action</th>
+            <th className="p-2 py-1 border border-gray-300">Time</th>
+            <th className="p-2 py-1 border border-gray-300">Date</th>
+            <th className="p-2 py-1 border border-gray-300">Status</th>
           </tr>
         </thead>
         <tbody>
