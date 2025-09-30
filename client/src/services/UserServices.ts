@@ -1,3 +1,35 @@
+import AxiosInstance from "./AxiosInstances";
+
+export interface DepartmentOption {
+    id: number;
+    name: string;
+}
+
+export interface CreateUserPayload {
+    name: string;
+    email: string;
+    password: string;
+    department_id: number;
+}
+
+const UserServices = {
+    async listDepartments(): Promise<DepartmentOption[]> {
+        const res = await AxiosInstance.get("/departments");
+        return res.data;
+    },
+
+    async listUsers() {
+        const res = await AxiosInstance.get("/users");
+        return res.data;
+    },
+
+    async createUser(payload: CreateUserPayload) {
+        const res = await AxiosInstance.post("/users", payload);
+        return res.data;
+    },
+};
+
+export default UserServices;
 // // client/src/services/UserService.ts
 
 // export interface Department {

@@ -15,46 +15,72 @@ class ArchiveController extends Controller
      */
     public function index()
     {
-        // Fetch only soft-deleted files and eager load their parent folder
-        $archivedFiles = File::onlyTrashed()
-            ->with('folder.department') 
-            ->get(['id', 'folder_id', 'fileName', 'fileType', 'fileSize', 'deleted_at']);
+        try {
+            // Query builder approach to avoid relationship pitfalls
+            $files = DB::table('tbl_files')
+                ->whereNotNull('tbl_files.deleted_at')
+                ->leftJoin('tbl_folder', 'tbl_folder.id', '=', 'tbl_files.folder_id')
+                ->leftJoin('departments', 'departments.id', '=', 'tbl_folder.department_id')
+                ->select(
+                    'tbl_files.id as id',
+                    DB::raw("'file' as type"),
+                    'tbl_files.fileName as name',
+                    'departments.name as department_name',
+                    'tbl_files.deleted_at as archived_at',
+                    'tbl_files.folder_id as original_folder_id',
+                    'tbl_files.fileType',
+                    'tbl_files.fileSize'
+                )
+                ->get()
+                ->map(function ($row) {
+                    return [
+                        'id' => $row->id,
+                        'type' => 'file',
+                        'name' => $row->name,
+                        'department_name' => $row->department_name ?? 'N/A',
+                        'archived_at' => $row->archived_at,
+                        'metadata' => [
+                            'original_folder_id' => $row->original_folder_id,
+                            'fileType' => $row->fileType,
+                            'fileSize' => $row->fileSize,
+                        ],
+                    ];
+                });
 
-        // Fetch only soft-deleted folders and eager load their department
-        $archivedFolders = Folder::onlyTrashed()
-            ->with('department')
-            ->get(['id', 'department_id', 'folderName', 'deleted_at']);
+            $folders = DB::table('tbl_folder')
+                ->whereNotNull('tbl_folder.deleted_at')
+                ->leftJoin('departments', 'departments.id', '=', 'tbl_folder.department_id')
+                ->select(
+                    'tbl_folder.id as id',
+                    DB::raw("'folder' as type"),
+                    'tbl_folder.folderName as name',
+                    'departments.name as department_name',
+                    'tbl_folder.deleted_at as archived_at',
+                    'tbl_folder.department_id as original_department_id'
+                )
+                ->get()
+                ->map(function ($row) {
+                    return [
+                        'id' => $row->id,
+                        'type' => 'folder',
+                        'name' => $row->name,
+                        'department_name' => $row->department_name ?? 'N/A',
+                        'archived_at' => $row->archived_at,
+                        'metadata' => [
+                            'original_department_id' => $row->original_department_id,
+                        ],
+                    ];
+                });
 
-        // Combine and sort by deleted_at (most recently archived first)
-        $combined = $archivedFiles->map(function ($item) {
-            // Map file data to a unified structure
-            return [
-                'id' => $item->id,
-                'type' => 'file',
-                'name' => $item->fileName,
-                'department_name' => $item->folder->department->name ?? 'N/A',
-                'archived_at' => $item->deleted_at,
-                'metadata' => [
-                    'original_folder_id' => $item->folder_id,
-                    'fileType' => $item->fileType,
-                    'fileSize' => $item->fileSize,
-                ]
-            ];
-        })->merge($archivedFolders->map(function ($item) {
-            // Map folder data to a unified structure
-            return [
-                'id' => $item->id,
-                'type' => 'folder',
-                'name' => $item->folderName,
-                'department_name' => $item->department->name ?? 'N/A',
-                'archived_at' => $item->deleted_at,
-                'metadata' => [
-                    'original_department_id' => $item->department_id,
-                ]
-            ];
-        }))->sortByDesc('archived_at')->values();
+            $combined = $files->merge($folders)->sortByDesc('archived_at')->values();
 
-        return response()->json($combined);
+            return response()->json($combined);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => 'Failed to load archive',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**
@@ -70,14 +96,14 @@ class ArchiveController extends Controller
         // Fetch folder details for logging
         $folder = $file->folder;
 
-        // LOGGING: File Restored
-        if (class_exists('App\Models\Activity') && $folder) {
+        // LOGGING: File Restored (use 'added' to represent back to active)
+        if (class_exists('App\\Models\\Activity') && $folder) {
               Activity::create([
                 'department_id' => $folder->department_id,
                 'folder_id'     => $folder->id,
                 'item_name'     => $file->fileName,
                 'type'          => 'file',
-                'status'        => 'restored',
+                'status'        => 'added',
             ]);
         }
 
@@ -95,14 +121,14 @@ class ArchiveController extends Controller
         $folder = Folder::onlyTrashed()->findOrFail($id);
         $folder->restore();
 
-        // LOGGING: Folder Restored
-        if (class_exists('App\Models\Activity')) {
+        // LOGGING: Folder Restored (use 'added' to represent back to active)
+        if (class_exists('App\\Models\\Activity')) {
               Activity::create([
                 'department_id' => $folder->department_id,
                 'folder_id'     => $folder->id, // Use folder id for context
                 'item_name'     => $folder->folderName,
                 'type'          => 'folder',
-                'status'        => 'restored',
+                'status'        => 'added',
             ]);
         }
 

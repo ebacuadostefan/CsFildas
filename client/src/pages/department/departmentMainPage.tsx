@@ -26,6 +26,16 @@ const Departments = () => {
   const [openMenuId, setOpenMenuId] = useState<number | null>(null); // State for three-dot menu
   const navigate = useNavigate();
 
+  // Scoped access: if a logged-in user has a department_id, restrict to that department only
+  const currentUser = (() => {
+    try {
+      return JSON.parse(localStorage.getItem("user") || "null");
+    } catch {
+      return null;
+    }
+  })();
+  const scopedDepartmentId: number | null = currentUser?.department_id ?? null;
+
   // --- Data Fetching Logic (Unchanged) ---
   const fetchDepartments = useCallback(async () => {
     try {
@@ -169,14 +179,17 @@ const Departments = () => {
 
   // --- Utility Functions ---
 
-  const filteredDepartments = departments.filter((dept) => {
-    const lowerSearchTerm = searchTerm.toLowerCase();
-    const nameMatch = dept.name.toLowerCase().includes(lowerSearchTerm);
-    const aliasMatch = dept.alias?.toLowerCase().includes(lowerSearchTerm);
-    const slugMatch = dept.slug?.toLowerCase().includes(lowerSearchTerm);
-
-    return nameMatch || aliasMatch || slugMatch;
-  });
+  const filteredDepartments = departments
+    .filter((dept) => {
+      const lowerSearchTerm = searchTerm.toLowerCase();
+      const nameMatch = dept.name.toLowerCase().includes(lowerSearchTerm);
+      const aliasMatch = dept.alias?.toLowerCase().includes(lowerSearchTerm);
+      const slugMatch = dept.slug?.toLowerCase().includes(lowerSearchTerm);
+      return nameMatch || aliasMatch || slugMatch;
+    })
+    .filter((dept) =>
+      scopedDepartmentId ? dept.id === scopedDepartmentId : true
+    );
 
   const toggleMenu = (deptId: number) => {
     setOpenMenuId(openMenuId === deptId ? null : deptId);
@@ -204,28 +217,33 @@ const Departments = () => {
       <Boxbar
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
-        onAdd={() => setIsAddModalOpen(true)}
+        onAdd={scopedDepartmentId ? undefined : () => setIsAddModalOpen(true)}
       />
 
       {/* SelectionBar is KEPT */}
       <SelectionBar
-        onAdd={() => setIsAddModalOpen(true)}
+        onAdd={scopedDepartmentId ? undefined : () => setIsAddModalOpen(true)}
         totalItems={filteredDepartments.length}
         selectedItems={selectedDepartments.length}
-        isEditing={isEditing}
+        isEditing={scopedDepartmentId ? false : isEditing}
         onSelectAll={(selectAll: boolean) => {
-          if (!isEditing) return;
+          if (scopedDepartmentId || !isEditing) return;
           setSelectedDepartments(
             selectAll ? filteredDepartments.map((d) => d.id) : []
           );
         }}
         onEdit={() => {
+          if (scopedDepartmentId) return;
           setIsEditing((prev) => !prev);
           setSelectedDepartments([]); // Clear selection when exiting edit mode
           setOpenMenuId(null); // Close any open three-dot menu
         }}
-        onDelete={() => handleDeleteDepartments()} // Multi-delete
-        onRename={() => handleRenameDepartment()} // Rename only if 1 is selected
+        onDelete={
+          scopedDepartmentId ? undefined : () => handleDeleteDepartments()
+        } // Multi-delete
+        onRename={
+          scopedDepartmentId ? undefined : () => handleRenameDepartment()
+        } // Rename only if 1 is selected
       />
 
       <div className="mt-10 w-full relative">
@@ -292,7 +310,7 @@ const Departments = () => {
                     {/* Three-Dot Menu: 
                       Only show when NOT in isEditing mode, as SelectionBar handles actions in that mode.
                     */}
-                    {!isEditing && (
+                    {!isEditing && !scopedDepartmentId && (
                       <div className="absolute top-2 right-2">
                         <button
                           onClick={(e) => {

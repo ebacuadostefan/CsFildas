@@ -47,7 +47,7 @@ class DepartmentController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'image' => 'required|image|mimes:jpg,jpeg,png,svg|max:5120',
+            'image' => 'required|file|mimetypes:image/*|max:10240',
             'name'  => 'required|string|max:255|unique:departments,name',
             'alias' => 'required|string|max:55',
         ]);
@@ -86,7 +86,7 @@ class DepartmentController extends Controller
         $validated = $request->validate([
             'name'  => 'required|string|max:255|unique:departments,name,' . $id,
             'alias' => 'required|string|max:55',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:20480', // max 20MB
+            'image' => 'nullable|file|mimetypes:image/*|max:20480', // allow any image type up to 20MB
         ]);
 
         if ($request->hasFile('image')) {

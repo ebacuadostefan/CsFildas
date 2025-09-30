@@ -8,6 +8,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Api\DepartmentController;
 use App\Http\Controllers\Api\ActivityController;
+use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Auth\UserAuthController;
+use App\Http\Controllers\Auth\AdminAuthController;
 
 // ----------------- Archive Management -----------------
 // Route to list all archived files and folders
@@ -24,6 +27,14 @@ Route::apiResource('departments', DepartmentController::class);
 
 // ----------------- Activities -----------------
 Route::get('/activities', [ActivityController::class, 'index']);
+
+// ----------------- Users -----------------
+Route::get('/users', [UserController::class, 'index']);
+Route::post('/users', [UserController::class, 'store']);
+
+// ----------------- Auth (Sanctum) -----------------
+Route::post('/user/login', [UserAuthController::class, 'login']);
+Route::post('/admin/login', [AdminAuthController::class, 'login']);
 
 // ----------------- Folders -----------------
 Route::get('/folders', [FolderController::class, 'index']);

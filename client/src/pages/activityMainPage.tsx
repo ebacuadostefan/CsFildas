@@ -4,11 +4,6 @@ import ActivityTable from "./component/ActivityTable";
 import { fetchActivities, type Activity } from "../services/ActivityServices";
 import Boxbar from "../layout/Boxbar";
 import Spinner from "../components/Spinner/Spinner";
-// FIX 2 & 3: Corrected paths for common components/layouts.
-// Assuming a 'components' folder is a sibling of 'pages', and 'layout' is a sibling of 'pages'.
-// Note: File extensions often need to be explicit or relative to the build configuration.
-
-// FIX 4: Corrected path for services directory, assuming it's a sibling of 'pages'
 
 const ActivityPage: React.FC = () => {
   // Initialize activities as an empty array to ensure stability

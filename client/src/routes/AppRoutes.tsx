@@ -16,6 +16,8 @@ const NotFoundPage = () => (
 );
 
 const AppRoutes = () => {
+  // Simplified routing: no role-based guard; dashboard is directly accessible after login
+
   return (
     <Routes>
       {/*Public route */}

@@ -83,7 +83,24 @@ const DepartmentServices = {
       `/departments/${departmentSlug}/folders`,
       folderData
     );
-    return response.data;
+    const created: Folder = response.data;
+
+    // Fire a live activity event so Activity page updates immediately
+    try {
+      const activity = {
+        id: Date.now(),
+        name: created.folderName,
+        type: 'folder' as const,
+        action: 'created' as const,
+        department: undefined,
+        created_at: new Date().toISOString(),
+      };
+      window.dispatchEvent(new CustomEvent('app-activity', { detail: activity }));
+    } catch {
+      // no-op
+    }
+
+    return created;
   },
 
   updateFolder: async (

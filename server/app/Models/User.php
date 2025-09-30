@@ -15,10 +15,17 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'department_id',
+        'role',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
     ];
+
+    public function department()
+    {
+        return $this->belongsTo(Department::class);
+    }
 }

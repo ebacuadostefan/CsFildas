@@ -7,7 +7,7 @@ import {
 } from "react-icons/fa";
 
 type SelectionBarProps = {
-  onAdd: () => void;
+  onAdd?: (() => void) | undefined;
   totalItems?: number;
   selectedItems?: number;
   onSelectAll?: (selectAll: boolean) => void;
@@ -39,13 +39,15 @@ const SelectionBar: React.FC<SelectionBarProps> = ({
     <div className="bg-white shadow-lg px-4 py-2 w-full flex items-center text-gray-500">
       {/* Left side: Add New */}
       <div className="mr-auto">
-        <button
-          onClick={onAdd}
-          className="flex items-center gap-1 hover:text-blue-500 transition"
-        >
-          <FaPlus />
-          <span className="hidden sm:inline">{addLabel}</span>
-        </button>
+        {onAdd && (
+          <button
+            onClick={onAdd}
+            className="flex items-center gap-1 hover:text-blue-500 transition"
+          >
+            <FaPlus />
+            <span className="hidden sm:inline">{addLabel}</span>
+          </button>
+        )}
       </div>
 
       {/* Right side: action buttons */}

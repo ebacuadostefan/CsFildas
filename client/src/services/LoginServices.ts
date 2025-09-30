@@ -25,9 +25,18 @@ export const useLoginForm = () => {
     setLoading(true);
     setErrors({});
     try {
+      // Single legacy login endpoint for simplicity
       const { data } = await AxiosInstance.post("/login", credentials);
       localStorage.setItem("token", data.token);
-      navigate("/dashboard");
+      AxiosInstance.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
+      if (data.user) {
+        localStorage.setItem("user", JSON.stringify({
+          id: data.user.id,
+          name: data.user.name,
+          email: data.user.email,
+        }));
+      }
+      navigate('/dashboard');
     } catch (error: any) {
       const msg = error?.response?.data?.message || "Invalid email or password";
       setErrors({ general: msg });

@@ -1,11 +1,11 @@
-import axios from "axios";
+import AxiosInstance from "./AxiosInstances";
 
 // Updated type to reflect the server response structure for mapping
 export type RawActivity = {
     id: number;
     item_name: string; // The name of the file/folder
     type: "folder" | "file";
-    status: "added" | "renamed" | "deleted"; // Backend's status field
+    status: "added" | "renamed" | "deleted" | "restored" | "created"; // Backend's status field (support legacy values)
     department: { name: string } | null;
     created_at: string;
 };
@@ -22,13 +22,13 @@ export type Activity = {
 
 // Helper to convert backend status to frontend action
 const mapStatusToAction = (status: RawActivity["status"]): Activity["action"] => {
-    if (status === "added") return "created";
+    if (status === "added" || status === "created" || status === "restored") return "created";
     if (status === "renamed") return "updated";
-    return status; // 'deleted' remains 'deleted'
+    return "deleted";
 };
 
 export const fetchActivities = async (): Promise<Activity[]> => {
-    const res = await axios.get("/api/activities");
+    const res = await AxiosInstance.get("/activities");
     const rawActivities: RawActivity[] = res.data;
 
     if (!Array.isArray(rawActivities)) throw new Error("Invalid API response");
