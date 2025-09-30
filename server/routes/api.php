@@ -11,6 +11,13 @@ use App\Http\Controllers\Api\ActivityController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Auth\UserAuthController;
 use App\Http\Controllers\Auth\AdminAuthController;
+use App\Http\Controllers\Api\NotificationController;
+
+// ----------------- Notifications -----------------
+Route::get('/notifications', [NotificationController::class, 'index']);
+Route::patch('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+Route::patch('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
 
 // ----------------- Archive Management -----------------
 // Route to list all archived files and folders
@@ -45,7 +52,6 @@ Route::delete('/folders/{id}', [FolderController::class, 'destroy']);
 
 // ----------------- Folders by Slug -----------------
 Route::get('/folders/slug/{slug}', [FolderController::class, 'showBySlug']);
-
 // Support both `/folders/{slug}/files`
 Route::get('/folders/{slug}/files', [FileController::class, 'indexBySlug']);
 Route::post('/folders/{slug}/files', [FileController::class, 'storeBySlug']);

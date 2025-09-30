@@ -28,28 +28,52 @@ class Folder extends Model
     protected $dates = ['deleted_at']; // 3. Add 'deleted_at' to date mutations
 
     protected static function boot()
-    {
-        parent::boot();
+{
+    parent::boot();
 
-        static::creating(function ($folder) {
-            if (empty($folder->slug)) {
-                // Generate slug from name (safer than just initials)
-                $slug = Str::slug($folder->folderName);
+    // Existing slug generator stays here...
+    static::creating(function ($folder) {
+        if (empty($folder->slug)) {
+            $slug = \Illuminate\Support\Str::slug($folder->folderName);
+            $original = $slug;
+            $count = 1;
 
-                // Ensure unique slug
-                $original = $slug;
-                $count = 1;
-
-                // IMPORTANT: When checking for existence, we use ->withTrashed() 
-                // to make sure we don't duplicate a slug from an archived item.
-                while (self::withTrashed()->where('slug', $slug)->exists()) {
-                    $slug = $original . '-' . $count++;
-                }
-
-                $folder->slug = $slug;
+            while (self::withTrashed()->where('slug', $slug)->exists()) {
+                $slug = $original . '-' . $count++;
             }
-        });
-    }
+
+            $folder->slug = $slug;
+        }
+    });
+
+    // Notify on created
+    static::created(function ($folder) {
+        \App\Models\Notification::create([
+            'action' => 'created',
+            'item_type' => 'folder',
+            'item_name' => $folder->folderName,
+        ]);
+    });
+
+    // Notify on updated
+    static::updated(function ($folder) {
+        \App\Models\Notification::create([
+            'action' => 'updated',
+            'item_type' => 'folder',
+            'item_name' => $folder->folderName,
+        ]);
+    });
+
+    // Notify on soft delete
+    static::deleted(function ($folder) {
+        \App\Models\Notification::create([
+            'action' => 'deleted',
+            'item_type' => 'folder',
+            'item_name' => $folder->folderName,
+        ]);
+    });
+}
+
 
     public function department()
     {

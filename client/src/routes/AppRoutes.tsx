@@ -9,6 +9,7 @@ import FolderPage from "../pages/department/Folders/FolderPage";
 import ActivityPage from "../pages/activityMainPage";
 import UserPage from "../pages/user/UserPage";
 import ArchivePage from "../pages/archiveMainPage";
+import NotificationPage from "../pages/notificationMainPage";
 
 // Optional: create a simple NotFound page
 const NotFoundPage = () => (
@@ -27,6 +28,14 @@ const AppRoutes = () => {
       <Route element={<AppLayout />}>
         <Route path="dashboard" element={<Dashboard />} />
 
+        <Route path="activitypage" element={<ActivityPage />} />
+
+        <Route path="archives" element={<ArchivePage />} />
+
+        <Route path="/users" element={<UserPage />} />
+
+        <Route path="notify" element={<NotificationPage />} />
+
         {/* Departments list */}
         <Route path="departments" element={<Departments />} />
 
@@ -38,11 +47,6 @@ const AppRoutes = () => {
           path="departments/:slug/folders/:folderSlug"
           element={<FolderPage />}
         />
-        <Route element={<ActivityPage />} path="activitypage" />
-
-        <Route element={<ArchivePage />} path="archives" />
-
-        <Route path="/users" element={<UserPage />} />
       </Route>
 
       {/*Catch-all route */}

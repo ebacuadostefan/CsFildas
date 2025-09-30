@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import dp from "../assets/img/dp.jpg";
-import logo from "../assets/img/Filamer.jpg"; // your logo
+import logo from "../assets/img/Filamer.jpg";
 import { useNavigate } from "react-router-dom";
+import { FaCog, FaSignOutAlt, FaBars, FaBell } from "react-icons/fa";
+import NotificationDropdown from "./NotificationDropdown";
 
 interface AppHeaderProps {
   onSidebarToggle?: () => void;
@@ -9,13 +11,14 @@ interface AppHeaderProps {
 
 const AppHeader: React.FC<AppHeaderProps> = ({ onSidebarToggle }) => {
   const [showSettings, setShowSettings] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   const navigate = useNavigate();
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const notifButtonRef = useRef<HTMLButtonElement>(null);
 
   const handleLogout = () => {
-    console.log("Logging out...");
     localStorage.removeItem("token");
     navigate("/");
   };
@@ -30,10 +33,20 @@ const AppHeader: React.FC<AppHeaderProps> = ({ onSidebarToggle }) => {
       ) {
         setShowSettings(false);
       }
+
+      if (
+        notifButtonRef.current &&
+        !notifButtonRef.current.contains(event.target as Node)
+      ) {
+        setShowNotifications(false);
+      }
     };
 
     const handleEsc = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setShowSettings(false);
+      if (event.key === "Escape") {
+        setShowSettings(false);
+        setShowNotifications(false);
+      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -51,40 +64,39 @@ const AppHeader: React.FC<AppHeaderProps> = ({ onSidebarToggle }) => {
         <div className="flex items-center justify-between w-full">
           {/* Left side: Logo + Sidebar toggle */}
           <div className="flex items-center space-x-2">
-            {/* Logo */}
-            <div className="flex items-center space-x-2"> {/* Added a div to contain both logo and text, and apply flex for alignment */}
-  <img
-    src={logo}
-    alt="Filamer Logo"
-    className="w-8 h-8 rounded-full object-cover"
-  />
-  <span className="text-xl font-bold text-white">FiLDas</span> {/* Added for the logo name */}
-</div>
-
-            {/* Sidebar toggle button */}
+            <div className="flex items-center space-x-2">
+              <img
+                src={logo}
+                alt="Filamer Logo"
+                className="w-8 h-8 rounded-full object-cover"
+              />
+              <span className="text-xl font-bold text-white">FiLDas</span>
+            </div>
             <button
               type="button"
-              className="inline-flex items-center p-2 text-sm text-gray-500 rounded-lg sm:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
+              className="inline-flex items-center p-2 text-sm text-gray-500 rounded-lg sm:hidden hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
               onClick={onSidebarToggle}
             >
-              <span className="sr-only">Open sidebar</span>
-              <svg
-                className="w-6 h-6"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  clipRule="evenodd"
-                  fillRule="evenodd"
-                  d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10z"
-                ></path>
-              </svg>
+              <FaBars className="w-5 h-5" />
             </button>
           </div>
 
-          {/* Right side: Profile dropdown */}
-          <div className="flex items-center">
+          {/* Right side: Profile + Notifications */}
+          <div className="flex items-center space-x-3">
+            <div className="relative mr-3 mt-1">
+              <button
+                ref={notifButtonRef}
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+              >
+                <FaBell className="w-5 h-5" />
+              </button>
+              <NotificationDropdown
+                isOpen={showNotifications}
+                onClose={() => setShowNotifications(false)}
+              />
+            </div>
+
             <div className="relative">
               <button
                 ref={buttonRef}
@@ -109,17 +121,17 @@ const AppHeader: React.FC<AppHeaderProps> = ({ onSidebarToggle }) => {
                     <li>
                       <a
                         href="#"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600"
                       >
-                        Settings
+                        <FaCog /> Settings
                       </a>
                     </li>
                     <li>
                       <button
                         onClick={handleLogout}
-                        className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white cursor-pointer"
+                        className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 cursor-pointer"
                       >
-                        Sign out
+                        <FaSignOutAlt /> Sign out
                       </button>
                     </li>
                   </ul>

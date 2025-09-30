@@ -4,12 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes; // Import SoftDeletes trait
+use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Folder;
 
 class File extends Model
 {
-    use HasFactory, SoftDeletes; // Use SoftDeletes trait
+    use HasFactory, SoftDeletes;
 
     protected $table = 'tbl_files'; // link to your table
 
@@ -21,11 +21,39 @@ class File extends Model
         'fileSize',
     ];
 
-    /**
-     * The attributes that should be mutated to dates.
-     * Required for SoftDeletes to work correctly.
-     */
-    protected $dates = ['deleted_at']; // Add 'deleted_at' to date mutations
+    protected $dates = ['deleted_at']; // Soft delete column
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Notify on created
+        static::created(function ($file) {
+            \App\Models\Notification::create([
+                'action'    => 'created',
+                'item_type' => 'file',
+                'item_name' => $file->fileName,
+            ]);
+        });
+
+        // Notify on updated
+        static::updated(function ($file) {
+            \App\Models\Notification::create([
+                'action'    => 'updated',
+                'item_type' => 'file',
+                'item_name' => $file->fileName,
+            ]);
+        });
+
+        // Notify on soft deleted
+        static::deleted(function ($file) {
+            \App\Models\Notification::create([
+                'action'    => 'deleted',
+                'item_type' => 'file',
+                'item_name' => $file->fileName,
+            ]);
+        });
+    }
 
     public function folder()
     {
