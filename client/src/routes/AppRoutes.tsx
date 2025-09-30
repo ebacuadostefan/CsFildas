@@ -8,6 +8,7 @@ import DepartmentFolderPage from "../pages/department/Folders/DepartmentFolderPa
 import FolderPage from "../pages/department/Folders/FolderPage";
 import ActivityPage from "../pages/activityMainPage";
 import UserPage from "../pages/user/UserPage";
+import ArchivePage from "../pages/archiveMainPage";
 
 // Optional: create a simple NotFound page
 const NotFoundPage = () => (
@@ -36,6 +37,8 @@ const AppRoutes = () => {
           element={<FolderPage />}
         />
         <Route element={<ActivityPage />} path="activitypage" />
+
+        <Route element={<ArchivePage />} path="archives" />
 
         <Route path="/users" element={<UserPage />} />
       </Route>

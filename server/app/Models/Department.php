@@ -14,7 +14,7 @@ class Department extends Model
         'slug',
         'image',
     ];
-
+ 
     protected static function boot()
     {
         parent::boot();

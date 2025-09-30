@@ -1,11 +1,11 @@
 import { useState } from "react";
 import Boxbar from "../../layout/Boxbar";
 
-export default function UserPage() {
+const UserPage: React.FC = () => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
   // Dummy user data for UI only
-  const UserPage: React.FC = () => {
-    const [searchTerm, setSearchTerm] = useState("");
-    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const users = [
     {
       id: 1,
@@ -27,6 +27,10 @@ export default function UserPage() {
     },
   ];
 
+  const filteredUsers = users.filter((user) =>
+    user.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <>
       <Boxbar
@@ -35,9 +39,7 @@ export default function UserPage() {
         onAdd={() => setIsAddModalOpen(true)}
       />
 
-      <div className="p-6 max-w-4xl mx-auto bg-white rounded-xl shadow-md space-y-6">
-        <h1 className="text-2xl font-bold">User List</h1>
-
+      <div className="mt-10 w-fullbg-white rounded-xl shadow-md space-y-6">
         <table className="w-full border-collapse border border-gray-300">
           <thead className="bg-gray-100">
             <tr>
@@ -53,7 +55,7 @@ export default function UserPage() {
             </tr>
           </thead>
           <tbody>
-            {users.map((user) => (
+            {filteredUsers.map((user) => (
               <tr key={user.id} className="hover:bg-gray-50">
                 <td className="border border-gray-300 px-4 py-2">
                   {user.name}
@@ -69,7 +71,23 @@ export default function UserPage() {
           </tbody>
         </table>
       </div>
+
+      {/* Add Modal placeholder */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50">
+          <div className="bg-white p-6 rounded shadow-md">
+            <h2 className="text-lg font-semibold">Add User</h2>
+            <button
+              className="mt-4 px-3 py-1 bg-gray-200 rounded"
+              onClick={() => setIsAddModalOpen(false)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 };
-}
+
+export default UserPage;

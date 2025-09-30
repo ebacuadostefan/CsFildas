@@ -1,62 +1,88 @@
 import React from "react";
-
-type Activity = {
-  id: number;
-  name: string; // action/message
-  time: string;
-  date: string;
-  status: "created" | "updated" | "deleted";
-};
+import type { Activity } from "../../services/ActivityServices";
 
 type Props = {
   activities: Activity[];
 };
 
-const ActivityTable: React.FC<Props> = ({ activities }) => {
+// FIX: Set default value for activities to an empty array ([]) to prevent the TypeError
+const ActivityTable: React.FC<Props> = ({ activities = [] }) => {
+  if (activities.length === 0) {
+    return (
+      <div className="text-center p-8 text-gray-500 bg-white rounded-xl shadow-lg">
+        No recent activities found.
+      </div>
+    );
+  }
+
+  // Helper to determine badge color based on action
+  const getStatusClasses = (action: Activity["action"]) => {
+    switch (action) {
+      case "created":
+        return "bg-green-500 hover:bg-green-600";
+      case "updated":
+        return "bg-blue-500 hover:bg-blue-600";
+      case "deleted":
+        return "bg-red-500 hover:bg-red-600";
+      default:
+        return "bg-gray-500";
+    }
+  };
+
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full text-sm text-center border border-gray-300">
-        <thead className="bg-gray-300 text-xs uppercase text-gray-800 font-medium">
+    <div className="overflow-x-auto shadow-xl rounded-xl">
+      <table className="min-w-full divide-y divide-gray-200 text-sm text-center">
+        <thead className="bg-white shadow-lg text-xs uppercase text-gray-800 font-semibold sticky top-0">
           <tr>
-            <th className="p-2 py-1 border border-gray-300">Id</th>
-            <th className="p-2 py-1 border border-gray-300">department</th>
-            <th className="p-2 py-1 border border-gray-300">Action</th>
-            <th className="p-2 py-1 border border-gray-300">Time</th>
-            <th className="p-2 py-1 border border-gray-300">Date</th>
-            <th className="p-2 py-1 border border-gray-300">Status</th>
+            <th className="p-3 whitespace-nowrap">#</th>
+            <th className="p-3 text-left">Department</th>
+            <th className="p-3 text-left">Item</th>
+            <th className="p-3">Action</th>
+            <th className="p-3">Date</th>
+            <th className="p-3">Time</th>
           </tr>
         </thead>
-        <tbody>
-          {activities.map((activity, index) => (
-            <tr
-              key={activity.id}
-              className={index % 2 === 0 ? "bg-gray-100" : "bg-gray-200"}
-            >
-              <td className="px-4 py-3 border border-gray-300">{index + 1}</td>
-              <td className="px-4 py-3 border border-gray-300">
-                {activity.name}
-              </td>
-              <td className="px-4 py-3 border border-gray-300">
-                {activity.time}
-              </td>
-              <td className="px-4 py-3 border border-gray-300">
-                {activity.date}
-              </td>
-              <td className="px-4 py-3 border border-gray-300">
-                <span
-                  className={`px-3 py-1 rounded-full text-white font-semibold ${
-                    activity.status === "created"
-                      ? "bg-green-500"
-                      : activity.status === "updated"
-                      ? "bg-blue-500"
-                      : "bg-red-600"
-                  }`}
-                >
-                  {activity.status}
-                </span>
-              </td>
-            </tr>
-          ))}
+        <tbody className="bg-white divide-y divide-gray-200">
+          {activities.map((activity, index) => {
+            const dateObj = activity.created_at
+              ? new Date(activity.created_at)
+              : null;
+
+            return (
+              <tr
+                key={activity.id}
+                className="transition-all hover:bg-blue-50/50"
+              >
+                <td className="px-4 py-3 whitespace-nowrap text-gray-700">
+                  {index + 1}
+                </td>
+                <td className="px-4 py-3 whitespace-nowrap text-left text-gray-700 font-medium">
+                  {activity.department?.name || "N/A"}
+                </td>
+                <td className="px-4 py-3 text-left font-medium text-gray-900">
+                  <span className="font-mono text-xs text-gray-500 mr-2">
+                    [{activity.type.toUpperCase()}]
+                  </span>
+                  {activity.name || "-"}
+                </td>
+                <td className="px-4 py-3 whitespace-nowrap">
+                  <span
+                    className={`px-3 py-1 text-xs rounded-full uppercase text-white font-bold transition-colors ${getStatusClasses(
+                      activity.action
+                    )}`}
+                  >
+                    {activity.action}
+                  </span>
+                </td>
+                <td className="px-4 py-3 whitespace-nowrap text-gray-600">
+                  {dateObj?.toLocaleDateString() || "-"}
+                </td>
+                <td className="px-4 py-3 whitespace-nowrap text-gray-600">
+                  {dateObj?.toLocaleTimeString() || "-"}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

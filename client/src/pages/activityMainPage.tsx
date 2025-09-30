@@ -1,100 +1,106 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
+// FIX 1: Assuming ActivityTable is in a sibling directory named 'component'
 import ActivityTable from "./component/ActivityTable";
+import { fetchActivities, type Activity } from "../services/ActivityServices";
 import Boxbar from "../layout/Boxbar";
-import SelectionBar from "../layout/SelectionBar";
 import Spinner from "../components/Spinner/Spinner";
-// make sure the path is correct
+// FIX 2 & 3: Corrected paths for common components/layouts.
+// Assuming a 'components' folder is a sibling of 'pages', and 'layout' is a sibling of 'pages'.
+// Note: File extensions often need to be explicit or relative to the build configuration.
 
-type Activity = {
-  id: number;
-  name: string; // message
-  time: string;
-  date: string;
-  status: "created" | "updated" | "deleted";
-};
+// FIX 4: Corrected path for services directory, assuming it's a sibling of 'pages'
 
 const ActivityPage: React.FC = () => {
+  // Initialize activities as an empty array to ensure stability
   const [activities, setActivities] = useState<Activity[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [selectedActivities, setSelectedActivities] = useState<number[]>([]);
-  const [isEditing, setIsEditing] = useState(false);
-  const [isLoading, setIsLoading] = useState(true); // spinner state
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadActivities = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await fetchActivities();
+      setActivities(data);
+    } catch (err) {
+      console.error("API Load Error:", err);
+      setError(
+        "Failed to load activities. Please check the network connection."
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    // simulate loading delay (or real API call)
-    const loadActivities = async () => {
+    loadActivities();
+
+    // Live Activity Listener
+    const liveActivityHandler = (e: Event) => {
       try {
-        const saved = localStorage.getItem("app-activities");
-        if (saved) {
-          setActivities(JSON.parse(saved));
-        }
-      } catch (error) {
-        console.error("Failed to load activities:", error);
-      } finally {
-        setIsLoading(false); // stop spinner
+        const newActivity = (e as CustomEvent<Activity>).detail;
+        // Add the new activity to the start of the list
+        setActivities((prev) => [newActivity, ...prev].slice(0, 100));
+      } catch (err) {
+        console.error("Failed to handle live activity event", err);
       }
     };
 
-    loadActivities();
-
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent<Activity>).detail;
-      setActivities((prev) => {
-        const next = [detail, ...prev].slice(0, 100);
-        try {
-          localStorage.setItem("app-activities", JSON.stringify(next));
-        } catch {}
-        return next;
-      });
-    };
-    window.addEventListener("app-activity", handler as EventListener);
-    return () =>
-      window.removeEventListener("app-activity", handler as EventListener);
-  }, []);
-
-  const filteredActivities = activities.filter((a) =>
-    a.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const handleDeleteActivities = () => {
-    if (selectedActivities.length === 0) return;
-    setActivities((prev) =>
-      prev.filter((a) => !selectedActivities.includes(a.id))
+    window.addEventListener(
+      "app-activity",
+      liveActivityHandler as EventListener
     );
-    setSelectedActivities([]);
-    setIsEditing(false);
-  };
+
+    // Cleanup listener
+    return () => {
+      window.removeEventListener(
+        "app-activity",
+        liveActivityHandler as EventListener
+      );
+    };
+  }, [loadActivities]);
+
+  const filteredActivities = useMemo(() => {
+    if (!searchTerm) return activities;
+    const lowerSearchTerm = searchTerm.toLowerCase();
+
+    return activities.filter(
+      (a) =>
+        // Search by item name or department name
+        a.name?.toLowerCase().includes(lowerSearchTerm) ||
+        a.department?.name?.toLowerCase().includes(lowerSearchTerm)
+    );
+  }, [activities, searchTerm]);
+
+  if (error) {
+    return (
+      <div className="text-red-600 text-center p-10 bg-red-100 border border-red-300 rounded-lg mx-auto max-w-lg mt-10">
+        {error}
+      </div>
+    );
+  }
 
   return (
     <>
       <Boxbar
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
-        onAdd={() => setIsAddModalOpen(true)}
-      />
-      <SelectionBar
-        onAdd={() => setIsAddModalOpen(true)}
-        totalItems={filteredActivities.length}
-        selectedItems={selectedActivities.length}
-        isEditing={isEditing}
-        onSelectAll={(selectAll: boolean) => {
-          if (!isEditing) return;
-          setSelectedActivities(
-            selectAll ? filteredActivities.map((a) => a.id) : []
-          );
-        }}
-        onEdit={() => setIsEditing((prev) => !prev)}
-        onDelete={handleDeleteActivities}
+        onAdd={() => {}}
       />
       <div className="mt-10 w-full relative">
-        {isLoading ? (
-          <div className="flex justify-center items-center h-64">
-            <Spinner size="lg" />
-          </div>
-        ) : (
-          <ActivityTable activities={filteredActivities} />
-        )}
+        <div className="w-full relative">
+          {isLoading ? (
+            <div className="flex justify-center items-center h-96 bg-white rounded-xl shadow-lg">
+              <Spinner size="lg" />
+              <span className="ml-3 text-gray-500">
+                Loading activity data...
+              </span>
+            </div>
+          ) : (
+            <ActivityTable activities={filteredActivities} />
+          )}
+        </div>
       </div>
     </>
   );

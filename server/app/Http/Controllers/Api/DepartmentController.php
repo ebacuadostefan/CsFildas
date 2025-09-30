@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
+
 class DepartmentController extends Controller
 {
     // GET /api/departments
@@ -61,8 +62,9 @@ class DepartmentController extends Controller
         $department = Department::create($validated);
 
         // Automatically create a folder for the department
+        // FIX: Using 'folderName' to match Folder Model's $fillable array
         Folder::create([
-            'folderName'    => $department->name,
+            'folderName'    => $department->name, 
             'description'   => "Main folder for {$department->name} department",
             'department_id' => $department->id,
             'slug'          => $department->slug,
@@ -84,7 +86,7 @@ class DepartmentController extends Controller
         $validated = $request->validate([
             'name'  => 'required|string|max:255|unique:departments,name,' . $id,
             'alias' => 'required|string|max:55',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:20480', // max 20MB
         ]);
 
         if ($request->hasFile('image')) {
@@ -136,8 +138,9 @@ class DepartmentController extends Controller
             $searchTerm = $request->query('q');
             
             // Apply grouped OR conditions to search across folderName, description, and slug
-            $folderQuery->where(function ($q) use ($searchTerm) {
-                $q->where('folderName', 'like', '%' . $searchTerm . '%')
+            // Using 'folderName' to match Model accessor/fillable name
+            $folderQuery->where(function ($q) use ($searchTerm) { 
+                $q->where('folderName', 'like', '%' . $searchTerm . '%') 
                   ->orWhere('description', 'like', '%' . $searchTerm . '%')
                   ->orWhere('slug', 'like', '%' . $searchTerm . '%');
             });
@@ -160,20 +163,50 @@ class DepartmentController extends Controller
     // POST create folder inside a department
     public function createFolder($slug, Request $request)
     {
-        $department = Department::where('slug', $slug)->firstOrFail();
-
+        // Validate request first
         $validated = $request->validate([
             'folderName' => 'required|string|max:255',
             'description'=> 'nullable|string',
         ]);
 
+        // Find the department by slug
+        $department = Department::where('slug', $slug)->firstOrFail();
+
+        // --- UNIQUE SLUG GENERATION LOGIC ---
+        $baseSlug = Str::slug($validated['folderName']);
+        $folderSlug = $baseSlug;
+        $counter = 1;
+
+        // Ensure the slug is unique within this department
+        // We use 'slug' for the lookup, which is fine since it's in $fillable
+        while (Folder::where('department_id', $department->id)
+                      ->where('slug', $folderSlug)
+                      ->exists()) {
+            $folderSlug = $baseSlug . '-' . $counter++;
+        }
+        // --- END UNIQUE SLUG GENERATION LOGIC ---
+
+        // Create the folder
+        // FIX: Using camelCase key 'folderName' to match Folder Model's $fillable array
         $folder = Folder::create([
-            'folderName'    => $validated['folderName'],
+            'folderName'    => $validated['folderName'], 
             'description'   => $validated['description'] ?? null,
             'department_id' => $department->id,
-            'slug'          => Str::slug($validated['folderName']),
+            'slug'          => $folderSlug, 
         ]);
 
+        // Optional: log activity (if you have Activity model)
+        if (class_exists('App\Models\Activity')) {
+            \App\Models\Activity::create([
+                'department_id' => $department->id,
+                'folder_id'     => $folder->id,
+                'item_name'     => $folder->folderName,
+                'type'          => 'folder',
+                'status'        => 'added',
+            ]);
+        }
+
+        // Return the new folder
         return response()->json([
             'id'            => $folder->id,
             'folderName'    => $folder->folderName,
@@ -182,4 +215,5 @@ class DepartmentController extends Controller
             'departmentId'  => $folder->department_id,
         ], 201);
     }
+
 }

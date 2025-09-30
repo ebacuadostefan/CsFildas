@@ -4,44 +4,79 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Folder;
+use App\Models\Department;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class FolderController extends Controller
 {
-    // Get all folders
+    /**
+     * Get all folders (paginated for performance).
+     */
     public function index()
     {
-        return response()->json(Folder::all(), 200);
+        return response()->json(Folder::paginate(15), 200);
     }
 
-    // Store new folder
-    public function store(Request $request)
+    /**
+     * Store new folder within a specific department.
+     */
+    public function store(Request $request, $departmentSlug)
     {
+        // 1. Find the Department using the slug from the URL
+        $department = Department::where('slug', $departmentSlug)->firstOrFail();
+
+        // 2. Validate folder data from the request body
         $validated = $request->validate([
-            'folderName' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'folderName'    => 'required|string|max:255',
+            'description'   => 'nullable|string',
         ]);
+        
+        // 3. Add the required department_id to the validated data
+        $validated['department_id'] = $department->id;
+        
+        // --- SLUG GENERATION LOGIC ---
+        $baseSlug = Str::slug($validated['folderName']);
+        $slug = $baseSlug;
+        $counter = 1;
+
+        // Ensure the slug is unique, checking active AND soft-deleted items
+        while (Folder::withTrashed()
+                     ->where('department_id', $validated['department_id'])
+                     ->where('slug', $slug)
+                     ->exists()) {
+            $slug = $baseSlug . '-' . $counter++;
+        }
+        
+        $validated['slug'] = $slug;
+        // -----------------------------
 
         $folder = Folder::create($validated);
 
         return response()->json($folder, 201);
     }
 
-    // Show single folder
+    /**
+     * Show single folder by ID.
+     */
     public function show($id)
     {
         $folder = Folder::findOrFail($id);
         return response()->json($folder, 200);
     }
 
-    // Show folder by slug
+    /**
+     * Show folder by slug.
+     */
     public function showBySlug($slug)
     {
         $folder = Folder::where('slug', $slug)->firstOrFail();
         return response()->json($folder, 200);
     }
 
-    // Update folder
+    /**
+     * Update folder.
+     */
     public function update(Request $request, $id)
     {
         $folder = Folder::findOrFail($id);
@@ -53,14 +88,43 @@ class FolderController extends Controller
 
         $folder->update($validated);
 
-        return response()->json($folder, 200);
-    }
+        // Optional: Activity log
+        if (class_exists(\App\Models\Activity::class)) {
+            \App\Models\Activity::create([
+                'department_id' => $folder->department_id,
+                'folder_id'     => $folder->id,
+                'item_name'     => $folder->folderName,
+                'type'          => 'folder',
+                'status'        => 'renamed',
+            ]);
+        }
 
-    // Delete folder
+        return response()->json($folder, 200);
+    } 
+
+    /**
+     * Delete folder (Soft Deletes).
+     */
     public function destroy($id)
     {
         $folder = Folder::findOrFail($id);
-        $folder->delete();
+
+        $folderId = $folder->id;
+        $departmentId = $folder->department_id;
+        $itemName = $folder->folderName;
+
+        $folder->delete(); // Uses the SoftDeletes trait
+
+        // Optional: Activity log
+        if (class_exists(\App\Models\Activity::class)) {
+            \App\Models\Activity::create([
+                'department_id' => $departmentId,
+                'folder_id'     => $folderId,
+                'item_name'     => $itemName,
+                'type'          => 'folder',
+                'status'        => 'deleted',
+            ]);
+        }
 
         return response()->json(null, 204);
     }

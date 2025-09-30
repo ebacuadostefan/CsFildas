@@ -13,16 +13,21 @@ const AddDepartmentForm: React.FC<AddDepartmentFormProps> = ({
   const [alias, setAlias] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleImageSelect = (file: File) => {
     const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
-    if (!file.type.startsWith("image/")) return;
-    if (file.size > MAX_SIZE_BYTES) {
-      alert("Image is larger than 5MB. Please choose a smaller file.");
+    if (!file.type.startsWith("image/")) {
+      setError("Only image files are allowed (jpg, jpeg, png, svg).");
       return;
     }
+    if (file.size > MAX_SIZE_BYTES) {
+      setError("Image must be less than 5MB.");
+      return;
+    }
+    setError(null);
     setImage(file);
     setPreview(URL.createObjectURL(file));
   };
@@ -41,9 +46,13 @@ const AddDepartmentForm: React.FC<AddDepartmentFormProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !alias.trim()) return;
+
+    if (!name.trim() || !alias.trim()) {
+      setError("Department name and alias are required.");
+      return;
+    }
     if (!image) {
-      alert("Image is required (max 5MB, jpg/jpeg/png/svg).");
+      setError("Please upload an image (max 5MB).");
       return;
     }
 
@@ -53,23 +62,34 @@ const AddDepartmentForm: React.FC<AddDepartmentFormProps> = ({
     formData.append("image", image);
 
     onSubmit(formData);
+
+    // reset form
     setName("");
     setAlias("");
     setImage(null);
     setPreview(null);
+    setError(null);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-6 bg-white p-6 rounded-xl shadow-md"
+    >
       {/* Header */}
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-800 mb-1">
-          Add Department
-        </h2>
-        <p className="text-gray-500 text-sm">
-          Create a new department and upload its logo.
+        <h2 className="text-2xl font-bold text-gray-800">Add Department</h2>
+        <p className="text-gray-500 text-sm mt-1">
+          Fill in the details and upload the department logo.
         </p>
       </div>
+
+      {/* Error message */}
+      {error && (
+        <div className="p-3 text-sm text-red-700 bg-red-100 border border-red-200 rounded-lg">
+          {error}
+        </div>
+      )}
 
       {/* Image Upload */}
       <div
@@ -86,7 +106,8 @@ const AddDepartmentForm: React.FC<AddDepartmentFormProps> = ({
           />
         ) : (
           <>
-            <div className="text-gray-400 text-sm mb-1">📁 Drop image here</div>
+            <span className="text-4xl mb-2">📁</span>
+            <div className="text-gray-500 text-sm mb-1">Drop image here</div>
             <div className="text-sm text-gray-600">or click to browse</div>
           </>
         )}

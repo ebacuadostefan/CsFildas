@@ -4,15 +4,18 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         Schema::create('departments', function (Blueprint $table) {
             $table->id();
-            $table->string('name'); // Department name
+            $table->string('name')->unique();
             $table->string('alias');
-            $table->string('image'); // Image path or URL
+            $table->string('image')->nullable();
+            $table->string('slug')->unique()->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

@@ -6,11 +6,7 @@ type HeadbarProps = {
   onAdd: () => void;
 };
 
-const Headbar: React.FC<HeadbarProps> = ({
-  searchTerm,
-  setSearchTerm,
-  onAdd,
-}) => {
+const Headbar: React.FC<HeadbarProps> = ({ searchTerm, setSearchTerm }) => {
   return (
     <div className="bg-white shadow-sm p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between relative w-full">
       {/* Breadcrumbs */}
