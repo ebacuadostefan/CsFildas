@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import type { Folder, FileItem } from "../../../services/DepartmentServices";
 import DepartmentServices from "../../../services/DepartmentServices";
 import FilesTable from "./Files/FileTable";
@@ -8,9 +8,15 @@ import Headbar from "../../../layout/Boxbar";
 import SelectionBar from "../../../layout/SelectionBar";
 import DeleteFolderModal from "./Components/DeleteForm";
 import RenameItemModal from "../../department/components/FolderFileForm";
+import useAuth from "../../../hooks/UseAuth";
 
 const FolderPage = () => {
-  const { folderSlug } = useParams<{ slug: string; folderSlug: string }>();
+  const { folderSlug, slug } = useParams<{
+    slug: string;
+    folderSlug: string;
+  }>();
+  const navigate = useNavigate();
+  const { canAccessDepartmentBySlug, getDepartmentRedirect } = useAuth();
   const [folder, setFolder] = useState<Folder | null>(null);
   const [files, setFiles] = useState<FileItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -21,6 +27,14 @@ const FolderPage = () => {
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const [fileToRename, setFileToRename] = useState<FileItem | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null!);
+
+  // Access control check
+  useEffect(() => {
+    if (slug && !canAccessDepartmentBySlug(slug)) {
+      navigate(getDepartmentRedirect());
+      return;
+    }
+  }, [slug, canAccessDepartmentBySlug, navigate, getDepartmentRedirect]);
 
   // Helpers
   const getFileNameOnly = (fileName: string) => {

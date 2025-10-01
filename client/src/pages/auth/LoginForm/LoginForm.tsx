@@ -51,7 +51,6 @@ const LoginFormUI: FC<LoginFormUIProps> = ({
         <SubmitButton
           label="Log In"
           loading={loading}
-          loadingLabel="Logging in..."
           className="bg-blue-700 hover:bg-blue-800 text-white py-3 rounded-lg shadow-md transition-all duration-200"
         />
       </form>

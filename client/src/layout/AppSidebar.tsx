@@ -6,6 +6,7 @@ import {
   FaUser,
   FaArchive,
 } from "react-icons/fa";
+import { useAuth } from "../hooks/UseAuth";
 
 interface AppSidebarProps {
   isOpen: boolean; // control sidebar visibility from parent
@@ -13,6 +14,11 @@ interface AppSidebarProps {
 }
 
 const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, onClose }) => {
+  const { user, isAdmin } = useAuth();
+  
+  // Display department name/alias if available, otherwise show role or default
+  const displayName = user?.department_name || user?.name || "Admin";
+
   return (
     <>
       {/* Sidebar */}
@@ -27,7 +33,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, onClose }) => {
         <div className="flex items-center justify-between mb-8 px-3 mt-8">
           <div className="flex items-center space-x-2">
             <img src={Filamer} alt="FCU" className="w-20 h-20 rounded-full" />
-            <span className="text-white font-semibold text-lg">QA Admin</span>
+            <span className="text-white font-semibold text-lg">{displayName}</span>
           </div>
           {onClose && (
             <button
@@ -60,33 +66,39 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, onClose }) => {
                 <span className="ms-3">Departments</span>
               </a>
             </li>
-            <li>
-              <a
-                href="/activitypage"
-                className="flex items-center p-2 text-white rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
-              >
-                <FaClipboardList className="text-white group-hover:text-gray-700 dark:group-hover:text-gray-200" />
-                <span className="ms-3">Activity</span>
-              </a>
-            </li>
-            <li>
-              <a
-                href="/archives"
-                className="flex items-center p-2 text-white rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
-              >
-                <FaArchive className="text-white group-hover:text-gray-700 dark:group-hover:text-gray-200" />
-                <span className="ms-3">Archive</span>
-              </a>
-            </li>
-            <li>
-              <a
-                href="/users"
-                className="flex items-center p-2 text-white rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
-              >
-                <FaUser className="text-white group-hover:text-gray-700 dark:group-hover:text-gray-200" />
-                <span className="ms-3">User</span>
-              </a>
-            </li>
+            
+            {/* Admin-only menu items */}
+            {isAdmin && (
+              <>
+                <li>
+                  <a
+                    href="/activitypage"
+                    className="flex items-center p-2 text-white rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+                  >
+                    <FaClipboardList className="text-white group-hover:text-gray-700 dark:group-hover:text-gray-200" />
+                    <span className="ms-3">Activity</span>
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="/archives"
+                    className="flex items-center p-2 text-white rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+                  >
+                    <FaArchive className="text-white group-hover:text-gray-700 dark:group-hover:text-gray-200" />
+                    <span className="ms-3">Archive</span>
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="/users"
+                    className="flex items-center p-2 text-white rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+                  >
+                    <FaUser className="text-white group-hover:text-gray-700 dark:group-hover:text-gray-200" />
+                    <span className="ms-3">User</span>
+                  </a>
+                </li>
+              </>
+            )}
           </ul>
         </div>
       </aside>

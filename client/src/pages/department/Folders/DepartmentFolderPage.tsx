@@ -9,6 +9,7 @@ import AddFolderModal from "./Components/AddFolderForm";
 import RenameItemModal from "../../department/components/FolderFileForm";
 import { HiDotsVertical } from "react-icons/hi";
 import { FaFolder } from "react-icons/fa";
+import useAuth from "../../../hooks/UseAuth";
 
 interface DepartmentFolder {
   id: number;
@@ -20,6 +21,8 @@ interface DepartmentFolder {
 const DepartmentFolderPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const { canAccessDepartmentBySlug, isAdmin, getDepartmentRedirect } =
+    useAuth();
   const [folders, setFolders] = useState<DepartmentFolder[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
@@ -32,6 +35,14 @@ const DepartmentFolderPage = () => {
     null
   );
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+
+  // Access control check
+  useEffect(() => {
+    if (slug && !canAccessDepartmentBySlug(slug)) {
+      navigate(getDepartmentRedirect());
+      return;
+    }
+  }, [slug, canAccessDepartmentBySlug, navigate, getDepartmentRedirect]);
 
   // --- Data Fetching Logic (using useCallback for consistency) ---
   const fetchFolders = useCallback(() => {

@@ -79,6 +79,10 @@ Route::post('/login', function (Request $request) {
     }
 
     $user = Auth::user();
+    // Ensure department relationship is included in the response
+    if (method_exists($user, 'department')) {
+        $user->load('department');
+    }
 
     // No Sanctum/token package installed; return a placeholder token
     $token = base64_encode($user->id . '|' . now()->timestamp);

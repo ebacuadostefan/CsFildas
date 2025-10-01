@@ -14,12 +14,10 @@ class QAAdminSeeder extends Seeder
             ['email' => 'admin@gmail.com'], // unique key
             [
                 'name' => 'QA Admin',
-                'password' => Hash::make('123123123'),
+                'password' => Hash::make('admin123'),
                 'email_verified_at' => now(),
-
-                // If your users table has these, uncomment and set:
-                // 'role' => 'qa_admin',
-                // 'status' => 'active',
+                'role' => 'admin',
+                'department_id' => null, // Admin has no specific department
             ]
         );
     }

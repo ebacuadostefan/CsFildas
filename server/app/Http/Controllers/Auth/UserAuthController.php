@@ -29,7 +29,10 @@ class UserAuthController extends Controller
             $token = base64_encode($user->id . '|' . now()->timestamp);
         }
 
-        return response()->json(['token' => $token, 'user' => $user]);
+        return response()->json([
+            'token' => $token, 
+            'user' => $user->load('department:id,name,slug')
+        ]);
     }
 }
 

@@ -34,6 +34,10 @@ export const useLoginForm = () => {
           id: data.user.id,
           name: data.user.name,
           email: data.user.email,
+          department_id: data.user.department_id,
+          department_name: data.user.department?.name,
+          department_slug: data.user.department?.slug,
+          role: data.user.role || 'user',
         }));
       }
       navigate('/dashboard');
