@@ -88,9 +88,6 @@ const ActivityPage: React.FC = () => {
           {isLoading ? (
             <div className="flex justify-center items-center h-96 bg-white rounded-xl shadow-lg">
               <Spinner size="lg" />
-              <span className="ml-3 text-gray-500">
-                Loading activity data...
-              </span>
             </div>
           ) : (
             <ActivityTable activities={filteredActivities} />
